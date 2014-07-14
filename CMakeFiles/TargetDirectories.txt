@@ -1,0 +1,3 @@
+/home/candice/Downloads/emokit-master/examples/contact/CMakeFiles/contact.dir
+/home/candice/Downloads/emokit-master/src/CMakeFiles/emokit.dir
+/home/candice/Downloads/emokit-master/examples/emokitd/CMakeFiles/emokitd.dir

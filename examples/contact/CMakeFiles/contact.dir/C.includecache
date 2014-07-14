@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/candice/Downloads/emokit-master/examples/contact/contact.c
+stdio.h
+-
+string.h
+-
+signal.h
+-
+emokit/emokit.h
+/home/candice/Downloads/emokit-master/examples/contact/emokit/emokit.h
+
+include/emokit/emokit.h
+stdint.h
+-
+
