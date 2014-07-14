@@ -1,7 +1,7 @@
 Fourth Year Design Project
 ==========================
 
-Code for signal preprocessing and fourier transform are located in ../emokit-master/python/emokit/FYDP
+Code for signal preprocessing and fourier transform are located in /python/emokit/FYDP
 
 Numpy, Scipy Installation
 ==========================
