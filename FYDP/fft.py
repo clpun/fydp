@@ -1,7 +1,8 @@
 import numpy as np
 import csv
+import time
 
-def write_to_file(data_set):
+def write_to_file(data_set, start_time):
 	# Write results to a csv file
 	F3 = data_set['F3']
 	FC5 = data_set['FC5']
@@ -24,10 +25,11 @@ def write_to_file(data_set):
 	print "F3 frequencies: "+str(freq)
 	print "F3 size: "+str(F3.size)'''
 
+	cur_time = time.time()-start_time
+
 	f = open('fft_power_spectrum.csv', 'a')
         writer = csv.writer(f)
-        # TODO Replace "" with current timestamp
-        data = [""]
+        data = [str(cur_time)]
         
         for i in range(0, len(F3)):
             data.append(str(F3[i]))

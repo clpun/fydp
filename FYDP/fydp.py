@@ -4,11 +4,13 @@ import emotiv
 import gevent
 import numpy as np
 import csv
+import time
 
 import fft
 import signal_preprocessing as sp
 
 headset = emotiv.Emotiv()
+start_time = time.time()
 
 # Initialize sensor buffers
 F3Buffer = []
@@ -131,7 +133,7 @@ def clear_buffers():
 def populate_csv_header():
     with open('fft_power_spectrum.csv', 'wb') as f:
         writer = csv.writer(f)
-        header = ["Time"]
+        header = ["Time (s)"]
         for i in range(0, 65, 4):
             header.append("f3_"+str(i)+"hz")
 
@@ -279,7 +281,7 @@ def main():
                 }
 
                 # Write data set to a csv file
-                fft.write_to_file(fft_dict)
+                fft.write_to_file(fft_dict, start_time)
 
                 # Clear buffers
                 clear_buffers()
