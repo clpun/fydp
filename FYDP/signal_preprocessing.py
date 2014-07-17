@@ -17,7 +17,7 @@ def low_pass_filter(data):
 	fs = 128.0
 	fmax = 0.5*fs
 	cutoff = 64.0/fmax
-	b, a = signal.butter(3, cutoff, btype='low')
+	b, a = signal.butter(9, cutoff, btype='low')
 
 	# Use the butterworth filter to filter the data
 	y1 = signal.lfilter(b, a, data)

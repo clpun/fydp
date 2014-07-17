@@ -8,6 +8,7 @@ import time
 
 import fft
 import signal_preprocessing as sp
+import CSP as csp
 
 headset = emotiv.Emotiv()
 start_time = time.time()
@@ -136,44 +137,18 @@ def populate_csv_header():
         header = ["Time (s)"]
         for i in range(0, 65, 4):
             header.append("f3_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("fc5_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("af3_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("f7_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("t7_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("p7_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("o1_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("o2_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("p8_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("t8_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("f8_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("af4_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("fc6_"+str(i)+"hz")
-
-        for i in range(0, 65, 4):
             header.append("fc6_"+str(i)+"hz")
 
         writer.writerow(header)
@@ -186,11 +161,31 @@ def main():
         populate_csv_header()
 
         # Find mean
-        #print "Please wait, calculating dc offset..."
         #find_mean()
 
-        #print "You can put on your headset!"
-        while True:
+        # For building a finite time domain En to feed into CSP. 
+        En = {
+            'F3': [],
+            'FC5': [],
+            'AF3': [],
+            'F7': [],
+            'T7': [],
+            'P7': [],
+            'O1': [],
+            'O2': [],
+            'P8': [],
+            'T8': [],
+            'F8': [],
+            'AF4': [],
+            'FC6': [],
+            'F4': []
+        }
+
+        print "Start!"
+        
+        # Run for 5 seconds
+        loop_counter = 0
+        while loop_counter < 20:
             # Retrieve emotiv packet
             packet = headset.dequeue()
 
@@ -246,6 +241,23 @@ def main():
                 FC6Buffer_clean = sp.preprocess(FC6Buffer, 8885.0)
                 F4Buffer_clean = sp.preprocess(F4Buffer, 8885.0)
 
+                # Put clean data into En
+                for i in range(0, len(F3Buffer_clean)):
+                    En['F3'].append(F3Buffer_clean[i])
+                    En['FC5'].append(FC5Buffer_clean[i])
+                    En['AF3'].append(AF3Buffer_clean[i])
+                    En['F7'].append(F7Buffer_clean[i])
+                    En['T7'].append(T7Buffer_clean[i])
+                    En['P7'].append(P7Buffer_clean[i])
+                    En['O1'].append(O1Buffer_clean[i])
+                    En['O2'].append(O2Buffer_clean[i])
+                    En['P8'].append(P8Buffer_clean[i])
+                    En['T8'].append(T8Buffer_clean[i])
+                    En['F8'].append(F8Buffer_clean[i])
+                    En['AF4'].append(AF4Buffer_clean[i])
+                    En['FC6'].append(FC6Buffer_clean[i])
+                    En['F4'].append(F4Buffer_clean[i])
+
                 # Apply DFT to extract frequency components
                 f3_fft = fft.compute_fft(F3Buffer_clean)
                 fc5_fft = fft.compute_fft(FC5Buffer_clean)
@@ -286,8 +298,12 @@ def main():
                 # Clear buffers
                 clear_buffers()
                 sample_counter = 0
+                loop_counter = loop_counter + 1
             
             gevent.sleep(0)
+        
+        # Feed into CSP filter.
+        csp.create_e_matrix(En)
     except KeyboardInterrupt:
         headset.close()
     finally:

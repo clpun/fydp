@@ -33,44 +33,18 @@ def write_to_file(data_set, start_time):
         
         for i in range(0, len(F3)):
             data.append(str(F3[i]))
-
-        for i in range(0, len(FC5)):
             data.append(str(FC5[i]))
-
-        for i in range(0, len(AF3)):
             data.append(str(AF3[i]))
-
-        for i in range(0, len(F7)):
             data.append(str(F7[i]))
-
-        for i in range(0, len(T7)):
             data.append(str(T7[i]))
-
-        for i in range(0, len(P7)):
             data.append(str(P7[i]))
-
-        for i in range(0, len(O1)):
             data.append(str(O1[i]))
-
-        for i in range(0, len(O2)):
             data.append(str(O2[i]))
-
-        for i in range(0, len(P8)):
             data.append(str(P8[i]))
-
-        for i in range(0, len(T8)):
             data.append(str(T8[i]))
-
-        for i in range(0, len(F8)):
             data.append(str(F8[i]))
-
-        for i in range(0, len(AF4)):
             data.append(str(AF4[i]))
-
-        for i in range(0, len(FC6)):
             data.append(str(FC6[i]))
-
-        for i in range(0, len(F4)):
             data.append(str(F4[i]))
 
         writer.writerow(data)
