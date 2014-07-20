@@ -304,7 +304,8 @@ def main():
             gevent.sleep(0)
         
         # Feed into CSP filter.
-        csp.create_e_matrix(En)
+        e_matrix = csp.create_e_matrix(En, trial_length)
+        sigma_matrix = csp.create_sigma_matrix(e_matrix, trial_length)
     except KeyboardInterrupt:
         headset.close()
     finally:
