@@ -11,11 +11,9 @@ import signal_preprocessing as sp
 
 
 def create_e_matrix(channel_map, width):
-	e_matrix = np.zeros(shape=(3,width))
+	e_matrix = np.zeros(shape=(14,width))
 
-	for idx, key in channel_map:
-		print e_matrix[idx]
-		print channel_map[key]
+	for idx, key in enumerate(channel_map):
 		e_matrix[idx] = channel_map[key]
 
 	return np.matrix(e_matrix)
@@ -37,4 +35,3 @@ def find_omega_matrix(sigmaMatrices) :
 	return : omega matrix
 	"""
 	pass
-
