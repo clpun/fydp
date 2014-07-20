@@ -185,7 +185,8 @@ def main():
         
         # Run for 5 seconds
         loop_counter = 0
-        while loop_counter < 20:
+        trial_length = 32
+        while loop_counter < trial_length:
             # Retrieve emotiv packet
             packet = headset.dequeue()
 
