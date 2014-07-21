@@ -14,9 +14,8 @@ def average_subtraction(data, mean):
 
 def low_pass_filter(data):
 	# Design a low pass butterworth filter
-	fs = 128.0
-	fmax = 0.5*fs
-	cutoff = 64.0/fmax
+	fmax = 45.0
+	cutoff = 45.0/fmax
 	b, a = signal.butter(4, cutoff, btype='low')
 
 	# Use the butterworth filter to filter the data

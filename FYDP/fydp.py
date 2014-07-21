@@ -135,21 +135,75 @@ def populate_csv_header():
     with open('fft_power_spectrum.csv', 'wb') as f:
         writer = csv.writer(f)
         header = ["Time (s)"]
-        for i in range(0, 65, 4):
+        i = 0
+        while i <= 45:
             header.append("f3_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("fc5_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("af3_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("f7_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("t7_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("p7_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("o1_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("o2_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("p8_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("t8_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("f8_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("af4_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("fc6_"+str(i)+"hz")
+            i = i + 2.8125
+
+        i = 0
+        while i <= 45:
             header.append("fc6_"+str(i)+"hz")
+            i = i + 2.8125
 
         writer.writerow(header)
 
