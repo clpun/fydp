@@ -18,7 +18,7 @@ def create_e_matrix(channel_map, width):
 
 	return np.matrix(e_matrix)
 
-def generate_sigma_matrix(e_matrix_array, width, num_trials):
+def generate_sigma_matrix(e_matrix_array, width):
 	""" channelMaps should contain all the training sets for a specific cognitive function
 	return : sigma matrix for the specific cognitive function
 	"""
@@ -28,7 +28,7 @@ def generate_sigma_matrix(e_matrix_array, width, num_trials):
 		current_matrix = np.divide(np.dot(e_matrix, e_matrix.T), np.matrix.trace(np.dot(e_matrix, e_matrix)))
 		matrix_sum = np.matrix.sum(current_matrix, matrix_sum)
 
-	return np.divide(matrix_sum, num_trials)
+	return np.divide(matrix_sum, len(e_matrix_array))
 
 def find_omega_matrix(sigmaMatrices) :
 	""" sigmaMatrices should contain all the sigma matrices for the specific cognitive functions to be compared
