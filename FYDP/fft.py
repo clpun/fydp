@@ -60,9 +60,9 @@ def write_to_file(data_set, start_time):
 
 def compute_fft(data):
 	#Check frequencies
-	timestep = 1/128.0
+	'''timestep = 1/128.0
 	freq = np.fft.fftfreq(data.size, d=timestep)
-	print "Frequencies: "+str(freq)
+	print "Frequencies: "+str(freq)'''
 
 	# Comput fft amplitude spectrum
 	y = np.fft.fft(data)
