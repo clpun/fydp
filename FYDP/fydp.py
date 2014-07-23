@@ -136,74 +136,74 @@ def populate_csv_header():
         writer = csv.writer(f)
         header = ["Time (s)"]
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("f3_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("fc5_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("af3_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("f7_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("t7_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("p7_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("o1_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("o2_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("p8_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("t8_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("f8_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("af4_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("fc6_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         i = 0
-        while i <= 45:
+        while i <= 63:
             header.append("fc6_"+str(i)+"hz")
-            i = i + 2.8125
+            i = i + 3.87878788
 
         writer.writerow(header)
 

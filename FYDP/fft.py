@@ -19,12 +19,6 @@ def write_to_file(data_set, start_time):
 	FC6 = data_set['FC6']
 	F4 = data_set['F4']
 
-	'''timestep = 1/128.0
-	n = F3.size
-	freq = np.fft.fftfreq(n, d=timestep)
-	print "F3 frequencies: "+str(freq)
-	print "F3 size: "+str(n)'''
-
 	cur_time = time.time()-start_time
 
 	f = open('fft_power_spectrum.csv', 'a')
@@ -65,11 +59,14 @@ def write_to_file(data_set, start_time):
         f.close()
 
 def compute_fft(data):
+	#Check frequencies
+	timestep = 1/128.0
+	freq = np.fft.fftfreq(data.size, d=timestep)
+	print "Frequencies: "+str(freq)
+
 	# Comput fft amplitude spectrum
 	y = np.fft.fft(data)
 	length_y = len(y)
-	y_normalized = (y/float(length_y))*2.0;
-	y_shifted = np.fft.fftshift(y_normalized)
 
 	# Return the positive frequency components
-	return np.absolute(y_shifted[0:(length_y/2)+1])
+	return np.absolute(y[0:(length_y/2)+1])
