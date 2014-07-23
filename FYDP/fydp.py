@@ -132,7 +132,7 @@ def clear_buffers():
 '''
 
 def populate_csv_header():
-    with open('fft_power_spectrum.csv', 'wb') as f:
+    with open('fft_mag_spectrum_formatted.csv', 'wb') as f:
         writer = csv.writer(f)
         header = ["Time (s)"]
         i = 0

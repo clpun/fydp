@@ -21,7 +21,7 @@ def write_to_file(data_set, start_time):
 
 	cur_time = time.time()-start_time
 
-	f = open('fft_power_spectrum.csv', 'a')
+	f = open('fft_mag_spectrum_formatted.csv', 'a')
         writer = csv.writer(f)
         data = [str(cur_time)]
         
