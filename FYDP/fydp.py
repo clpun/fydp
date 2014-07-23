@@ -115,6 +115,8 @@ def find_mean():
     global f4_mean
     f4_mean = np.mean(F4Buffer)
 
+    clear_buffers()
+
     '''print "F3 mean: "+str(f3_mean)
     print "FC5 mean: "+str(f3_mean)
     print "AF3 mean: "+str(f3_mean)
