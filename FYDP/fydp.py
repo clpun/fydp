@@ -45,7 +45,7 @@ def clear_buffers():
     del FC6Buffer[:]
     del F4Buffer[:]
 
-'''def find_mean():
+def find_mean():
     counter = 0
 
     while counter < 100:
@@ -115,7 +115,7 @@ def clear_buffers():
     global f4_mean
     f4_mean = np.mean(F4Buffer)
 
-    print "F3 mean: "+str(f3_mean)
+    '''print "F3 mean: "+str(f3_mean)
     print "FC5 mean: "+str(f3_mean)
     print "AF3 mean: "+str(f3_mean)
     print "F7 mean: "+str(f3_mean)
@@ -128,8 +128,7 @@ def clear_buffers():
     print "F8 mean: "+str(f3_mean)
     print "AF4 mean: "+str(f3_mean)
     print "FC6 mean: "+str(f3_mean)
-    print "F4 mean: "+str(f3_mean)
-'''
+    print "F4 mean: "+str(f3_mean)'''
 
 def populate_csv_header():
     with open('fft_mag_spectrum_formatted.csv', 'wb') as f:
@@ -215,7 +214,9 @@ def main():
         populate_csv_header()
 
         # Find mean
-        #find_mean()
+        find_mean()
+
+        raw_input("Please press enter when you are ready. ")
 
         # For building a finite time domain En to feed into CSP. 
         En = {
