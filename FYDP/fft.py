@@ -19,32 +19,39 @@ def write_to_file(data_set, start_time):
 	FC6 = data_set['FC6']
 	F4 = data_set['F4']
 
-	'''timestep = 1/128.0
-	n = F3.size
-	freq = np.fft.fftfreq(n, d=timestep)
-	print "F3 frequencies: "+str(freq)
-	print "F3 size: "+str(F3.size)'''
-
 	cur_time = time.time()-start_time
 
-	f = open('fft_power_spectrum.csv', 'a')
+	f = open('fft_mag_spectrum_formatted.csv', 'a')
         writer = csv.writer(f)
         data = [str(cur_time)]
         
         for i in range(0, len(F3)):
             data.append(str(F3[i]))
+        for i in range(0, len(FC5)):
             data.append(str(FC5[i]))
+        for i in range(0, len(AF3)):
             data.append(str(AF3[i]))
+        for i in range(0, len(F7)):
             data.append(str(F7[i]))
+        for i in range(0, len(T7)):
             data.append(str(T7[i]))
+        for i in range(0, len(P7)):
             data.append(str(P7[i]))
+        for i in range(0, len(O1)):
             data.append(str(O1[i]))
+        for i in range(0, len(O2)):
             data.append(str(O2[i]))
+        for i in range(0, len(P8)):
             data.append(str(P8[i]))
+        for i in range(0, len(T8)):
             data.append(str(T8[i]))
+        for i in range(0, len(F8)):
             data.append(str(F8[i]))
+        for i in range(0, len(AF4)):
             data.append(str(AF4[i]))
+        for i in range(0, len(FC6)):
             data.append(str(FC6[i]))
+        for i in range(0, len(F4)):
             data.append(str(F4[i]))
 
         writer.writerow(data)
@@ -52,11 +59,14 @@ def write_to_file(data_set, start_time):
         f.close()
 
 def compute_fft(data):
+	#Check frequencies
+	'''timestep = 1/128.0
+	freq = np.fft.fftfreq(data.size, d=timestep)
+	print "Frequencies: "+str(freq)'''
+
 	# Comput fft amplitude spectrum
 	y = np.fft.fft(data)
 	length_y = len(y)
-	y_normalized = (y/float(length_y))*2.0;
-	y_shifted = np.fft.fftshift(y_normalized)
 
 	# Return the positive frequency components
-	return np.absolute(y_shifted[0:(length_y/2)+1])
+	return np.absolute(y[0:(length_y/2)+1])

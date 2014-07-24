@@ -9,6 +9,7 @@ import time
 import fft
 import signal_preprocessing as sp
 import CSP as csp
+import check_signal_quality
 
 headset = emotiv.Emotiv()
 start_time = time.time()
@@ -45,7 +46,7 @@ def clear_buffers():
     del FC6Buffer[:]
     del F4Buffer[:]
 
-'''def find_mean():
+def find_mean():
     counter = 0
 
     while counter < 100:
@@ -115,7 +116,9 @@ def clear_buffers():
     global f4_mean
     f4_mean = np.mean(F4Buffer)
 
-    print "F3 mean: "+str(f3_mean)
+    clear_buffers()
+
+    '''print "F3 mean: "+str(f3_mean)
     print "FC5 mean: "+str(f3_mean)
     print "AF3 mean: "+str(f3_mean)
     print "F7 mean: "+str(f3_mean)
@@ -128,28 +131,81 @@ def clear_buffers():
     print "F8 mean: "+str(f3_mean)
     print "AF4 mean: "+str(f3_mean)
     print "FC6 mean: "+str(f3_mean)
-    print "F4 mean: "+str(f3_mean)
-'''
+    print "F4 mean: "+str(f3_mean)'''
 
 def populate_csv_header():
-    with open('fft_power_spectrum.csv', 'wb') as f:
+    with open('fft_mag_spectrum_formatted.csv', 'wb') as f:
         writer = csv.writer(f)
         header = ["Time (s)"]
-        for i in range(0, 65, 4):
+        i = 0
+        while i <= 63:
             header.append("f3_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("fc5_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("af3_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("f7_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("t7_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("p7_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("o1_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("o2_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("p8_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("t8_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("f8_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("af4_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("fc6_"+str(i)+"hz")
+            i = i + 3.87878788
+
+        i = 0
+        while i <= 63:
             header.append("fc6_"+str(i)+"hz")
+            i = i + 3.87878788
 
         writer.writerow(header)
 
@@ -161,7 +217,13 @@ def main():
         populate_csv_header()
 
         # Find mean
-        #find_mean()
+        print "Calculating signal average. Please waiting..."
+        find_mean()
+
+        print "Please check the quality of signals. "
+        check_signal_quality.run(headset)
+
+        raw_input("Please press enter when you are ready to start. ")
 
         # For building a finite time domain En to feed into CSP. 
         En = {
