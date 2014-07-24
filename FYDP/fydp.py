@@ -9,6 +9,7 @@ import time
 import fft
 import signal_preprocessing as sp
 import CSP as csp
+import check_signal_quality
 
 headset = emotiv.Emotiv()
 start_time = time.time()
@@ -216,9 +217,13 @@ def main():
         populate_csv_header()
 
         # Find mean
+        print "Calculating signal average. Please waiting..."
         find_mean()
 
-        raw_input("Please press enter when you are ready. ")
+        print "Please check the quality of signals. "
+        check_signal_quality.run(headset)
+
+        raw_input("Please press enter when you are ready to start. ")
 
         # For building a finite time domain En to feed into CSP. 
         En = {
