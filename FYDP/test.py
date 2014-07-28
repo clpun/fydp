@@ -5,7 +5,7 @@ import numpy as np
 class CSPTests(unittest.TestCase):
 	"""Unit tests for CSP module"""
 	def testGenerateEMatrix(self):
-		expected_matrix_1 = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+		expected_matrix_1 = np.matrix([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -18,8 +18,8 @@ class CSPTests(unittest.TestCase):
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
-		expected_matrix_2 = [[0, 1, 2, 3],
+							[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]])
+		expected_matrix_2 = np.matrix([[0, 1, 2, 3],
 							[0, 1, 2, 3],
 							[0, 1, 2, 3],
 							[0, 1, 2, 3],
@@ -32,7 +32,7 @@ class CSPTests(unittest.TestCase):
 							[0, 1, 2, 3],
 							[0, 1, 2, 3],
 							[0, 1, 2, 3],
-							[0, 1, 2, 3]]
+							[0, 1, 2, 3]])
 		channel_map_1 = {
 			'r1':  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
 			'r2':  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -74,10 +74,10 @@ class CSPTests(unittest.TestCase):
 	def testGenerateSignmaMatrix(self):
 		#the number of rows should be 14
 		
-		e_matrix_array_input = [[[1,2,3],   [4,5,6],   [7,8,9]   ],
+		e_matrix_array_input = np.matrix([[[1,2,3],   [4,5,6],   [7,8,9]   ],
 								[[10,11,12],[13,14,15],[16,17,18]],
 								[[19,20,21],[22,23,24],[25,26,27]]
-								]
+								])
 		output_matrix = csp.generate_sigma_matrix(e_matrix_array_input, 3)
 		expected_output_matrix = []
 		self.assertTrue(output_matrix.matches(expected_output_matrix))
