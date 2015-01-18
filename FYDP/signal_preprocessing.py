@@ -15,8 +15,8 @@ def average_subtraction(data, mean):
 def low_pass_filter(data):
 	# Design a low pass butterworth filter
 	fmax = 64.0
-	low_cutoff = 0.5/fmax # To better remove dc components
-	high_cutoff = 45.0/fmax
+	low_cutoff = 25.0/fmax # To better remove dc components
+	high_cutoff = 64.0/fmax
 	b, a = signal.butter(4, [low_cutoff, high_cutoff], btype='band')
 
 	# Use the butterworth filter to filter the data
@@ -30,6 +30,6 @@ def preprocess(data, mean):
 	numpy_array = np.array(data)
 
 	y1 = average_subtraction(numpy_array, mean)
-	y2 = low_pass_filter(y1)
-	y3 = moving_avg_filter(y2)
-	return y3
+	# y2 = low_pass_filter(y1)
+	# y3 = moving_avg_filter(y1)
+	return y1
