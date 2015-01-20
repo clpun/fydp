@@ -5,6 +5,7 @@ import gevent
 import numpy as np
 import csv
 import time
+import os
 
 import fft
 import signal_preprocessing as sp
@@ -13,6 +14,21 @@ import check_signal_quality
 
 headset = emotiv.Emotiv()
 start_time = time.time()
+
+#user_name = ''
+#env_offset_avg_var = {}
+class UserPreference:
+    user_name = "User"
+    env_offset_avg_var = {}
+    def write_env_offset_avg_var(self,name,var):
+        #env_offset_avg_var[name] = var
+        #print 'write_env_offset_avg_var = {0} : {1}'.format(name,str(var))
+        self.env_offset_avg_var.update({name: var})
+        #print env_offset_avg_var
+    def read_env_offset_avg_var(self,name):
+        return self.env_offset_avg_var[name]
+
+user_preference = UserPreference()
 
 # Variables for the sum magnitude of the 5 frequency bands. 
 delta_sum_mag = {}
@@ -24,6 +40,26 @@ gamma_sum_mag = {}
 # Variables for determining if a frequency band has steady increase in F3 
 f3_delta_prev_mag = 0
 f3_delta_count = 0
+o1_alpha_prev_mag = 0
+o1_beta_prev_mag = 0
+o1_theta_prev_mag = 0
+o1_delta_prev_mag = 0
+o1_gamma_prev_mag = 0
+o2_alpha_prev_mag = 0
+o2_beta_prev_mag = 0
+o2_theta_prev_mag = 0
+o2_delta_prev_mag = 0
+o2_gamma_prev_mag = 0
+o1_alpha_count = 0
+o1_beta_count = 0
+o1_theta_count = 0
+o1_delta_count = 0
+o1_gamma_count = 0
+o2_alpha_count = 0
+o2_beta_count = 0
+o2_theta_count = 0
+o2_delta_count = 0
+o2_gamma_count = 0
 
 # Initialize sensor buffers
 F3Buffer = []
@@ -40,6 +76,130 @@ F8Buffer = []
 AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
+
+def verify_user():
+    global user_preference
+    #global user_name
+    #global env_offset_avg_var
+    global f3_mean
+    global fc5_mean
+    global af3_mean
+    global f7_mean
+    global t7_mean
+    global p7_mean
+    global o1_mean
+    global o2_mean
+    global p8_mean
+    global t8_mean
+    global f8_mean
+    global af4_mean
+    global fc6_mean
+    global f4_mean
+    user_verify = False
+    while not user_verify:
+        user_name = raw_input("User id: ")
+        if user_name.isalnum():
+            user_preference.user_name = user_name
+            try:
+                if os.path.exists(user_name + '.txt'):
+                    pref_file = open(user_name + '.txt','r+')
+                else:
+                    pref_file = open(user_name + '.txt','w+')
+                    print "Welcome new user : " + user_name
+                line = pref_file.readline()
+                while line != '':
+                    elements = line.split(':')
+                    if len(elements) == 2:
+                        if elements[0] == 'f3_mean':
+                            user_preference.write_env_offset_avg_var('f3_mean',float(elements[1]))
+                        elif elements[0] == 'fc5_mean':
+                            user_preference.write_env_offset_avg_var('fc5_mean',float(elements[1]))
+                        elif elements[0] == 'af3_mean':
+                            user_preference.write_env_offset_avg_var('af3_mean',float(elements[1]))
+                        elif elements[0] == 'f7_mean':
+                            user_preference.write_env_offset_avg_var('f7_mean',float(elements[1]))
+                        elif elements[0] == 't7_mean':
+                            user_preference.write_env_offset_avg_var('t7_mean',float(elements[1]))
+                        elif elements[0] == 'p7_mean':
+                            user_preference.write_env_offset_avg_var('p7_mean',float(elements[1]))
+                        elif elements[0] == 'o1_mean':
+                            user_preference.write_env_offset_avg_var('o1_mean',float(elements[1]))
+                        elif elements[0] == 'o2_mean':
+                            user_preference.write_env_offset_avg_var('o2_mean',float(elements[1]))
+                        elif elements[0] == 'p8_mean':
+                            user_preference.write_env_offset_avg_var('p8_mean',float(elements[1]))
+                        elif elements[0] == 't8_mean':
+                            user_preference.write_env_offset_avg_var('t8_mean',float(elements[1]))
+                        elif elements[0] == 'f8_mean':
+                            user_preference.write_env_offset_avg_var('f8_mean',float(elements[1]))
+                        elif elements[0] == 'af4_mean':
+                            user_preference.write_env_offset_avg_var('af4_mean',float(elements[1]))
+                        elif elements[0] == 'fc6_mean':
+                            user_preference.write_env_offset_avg_var('fc6_mean',float(elements[1]))
+                        elif elements[0] == 'f4_mean':
+                            user_preference.write_env_offset_avg_var('f4_mean',float(elements[1]))
+                        else:
+                            pass
+                    line = pref_file.readline()
+                pref_file.close()
+                if len(user_preference.env_offset_avg_var) == 0:
+                    find_mean()
+                    print "user pref : " + str(len(user_preference.env_offset_avg_var))
+                    print user_preference.env_offset_avg_var
+                    pref_file = open(user_name + '.txt','w')
+                    param = []
+                    for keys in user_preference.env_offset_avg_var:
+                        param.append(keys + ':' + str(user_preference.env_offset_avg_var[keys])+'\n')
+                        print (keys + ':' + str(user_preference.env_offset_avg_var[keys])+'\n')
+                    pref_file.writelines(param)
+                    pref_file.close()
+                    user_verify = True
+                else:
+                    prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
+                    while not (prompt_calculate_average == 'Y' or prompt_calculate_average == 'N'):
+                        prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
+                    if prompt_calculate_average == 'Y':
+                        f3_mean = user_preference.read_env_offset_avg_var('f3_mean')
+                        fc5_mean = user_preference.read_env_offset_avg_var('fc5_mean')
+                        af3_mean = user_preference.read_env_offset_avg_var('af3_mean')
+                        f7_mean = user_preference.read_env_offset_avg_var('f7_mean')
+                        t7_mean = user_preference.read_env_offset_avg_var('t7_mean')
+                        p7_mean = user_preference.read_env_offset_avg_var('p7_mean')
+                        o1_mean = user_preference.read_env_offset_avg_var('o1_mean')
+                        o2_mean = user_preference.read_env_offset_avg_var('o2_mean')
+                        p8_mean = user_preference.read_env_offset_avg_var('p8_mean')
+                        t8_mean = user_preference.read_env_offset_avg_var('t8_mean')
+                        f8_mean = user_preference.read_env_offset_avg_var('f8_mean')
+                        af4_mean = user_preference.read_env_offset_avg_var('af4_mean')
+                        fc6_mean = user_preference.read_env_offset_avg_var('fc6_mean')
+                        f4_mean = user_preference.read_env_offset_avg_var('f4_mean')
+                        user_verify = True
+                    elif prompt_calculate_average == 'N':
+                        find_mean()
+                        param = []
+                        for keys in user_preference.env_offset_avg_var:
+                            param.append(keys + ':' + str(user_preference.env_offset_avg_var[keys])+'\n')
+                        pref_file.writelines(param)
+                        pref_file.close()
+                        user_verify = True
+                # for key in user_preference.env_offset_avg_var:
+                #     try:
+                #         if 
+                #             user_verify = True
+                #         if float(user_preference.env_offset_avg_var[key]) <= 0:
+                #             user_verify = False
+                #     except:
+                #         user_verify = False
+                if not user_verify:
+                    print "Something is wrong with the environment offset average variables. Please use another user id."
+            except IOError:
+                print "IO Error"
+            except RuntimeError:
+                user_verify = False
+                print "User id is corrupted. Please use another user id."
+                pref_file.close()
+        else:
+            print "Invalid user id. Please use an alphanumeric id."
 
 def clear_buffers():
     del F3Buffer[:]
@@ -58,8 +218,11 @@ def clear_buffers():
     del F4Buffer[:]
 
 def find_mean():
+    global user_preference
+    #global user_name
     counter = 0
-
+    raw_input("Need to Calculate signal average. Do NOT wear the headset. Please press enter to continue...")
+    print("Calculating signal average. Please wait...")
     while counter < 1000:
         # Retrieve emotiv packet
         packet = headset.dequeue()
@@ -100,32 +263,46 @@ def find_mean():
 
     global f3_mean
     f3_mean = np.mean(F3Buffer)
+    user_preference.write_env_offset_avg_var('f3_mean',f3_mean)
     global fc5_mean
     fc5_mean = np.mean(FC5Buffer)
+    user_preference.write_env_offset_avg_var('fc5_mean',fc5_mean)
     global af3_mean
     af3_mean = np.mean(AF3Buffer)
+    user_preference.write_env_offset_avg_var('af3_mean',af3_mean)
     global f7_mean
     f7_mean = np.mean(F7Buffer)
+    user_preference.write_env_offset_avg_var('f7_mean',f7_mean)
     global t7_mean
     t7_mean = np.mean(T7Buffer)
+    user_preference.write_env_offset_avg_var('t7_mean',t7_mean)
     global p7_mean
     p7_mean = np.mean(P7Buffer)
+    user_preference.write_env_offset_avg_var('p7_mean',p7_mean)
     global o1_mean
     o1_mean = np.mean(O1Buffer)
+    user_preference.write_env_offset_avg_var('o1_mean',o1_mean)
     global o2_mean
     o2_mean = np.mean(O2Buffer)
+    user_preference.write_env_offset_avg_var('o2_mean',o2_mean)
     global p8_mean
     p8_mean = np.mean(P8Buffer)
+    user_preference.write_env_offset_avg_var('p8_mean',p8_mean)
     global t8_mean
     t8_mean = np.mean(T8Buffer)
+    user_preference.write_env_offset_avg_var('t8_mean',t8_mean)
     global f8_mean
     f8_mean = np.mean(F8Buffer)
+    user_preference.write_env_offset_avg_var('f8_mean',f8_mean)
     global af4_mean
     af4_mean = np.mean(AF4Buffer)
+    user_preference.write_env_offset_avg_var('af4_mean',af4_mean)
     global fc6_mean
     fc6_mean = np.mean(FC6Buffer)
+    user_preference.write_env_offset_avg_var('fc6_mean',fc6_mean)
     global f4_mean
     f4_mean = np.mean(F4Buffer)
+    user_preference.write_env_offset_avg_var('f4_mean',f4_mean)
 
     clear_buffers()
 
@@ -205,19 +382,64 @@ def populate_csv_header():
 
         writer.writerow(header)
 
-def main():
+def analyze_pattern():
     global f3_delta_prev_mag
     global f3_delta_count
+    global o1_alpha_prev_mag
+    global o1_beta_prev_mag
+    global o1_theta_prev_mag
+    global o1_delta_prev_mag
+    global o1_gamma_prev_mag
+    global o2_alpha_prev_mag
+    global o2_beta_prev_mag
+    global o2_theta_prev_mag
+    global o2_delta_prev_mag
+    global o2_gamma_prev_mag
+    global o1_alpha_count
+    global o1_beta_count
+    global o1_theta_count
+    global o1_delta_count
+    global o1_gamma_count
+    global o2_alpha_count
+    global o2_beta_count
+    global o2_theta_count
+    global o2_delta_count
+    global o2_gamma_count
+
+    if(gamma_sum_mag['O1'] > o1_gamma_prev_mag):
+        #print "O1 gamma increase; mag = {0}".format(gamma_sum_mag['O1'])
+        o1_gamma_count += 1
+    else:
+        o1_gamma_count = 0
+    if(gamma_sum_mag['O2'] > o2_gamma_prev_mag):
+        #print "O2 gamma increase; mag = {0}".format(gamma_sum_mag['O2'])
+        o2_gamma_count += 1
+    else:
+        o2_gamma_count = 0
+
+    o1_gamma_prev_mag = gamma_sum_mag['O1']
+    o2_gamma_prev_mag = gamma_sum_mag['O2']
+
+    if o1_gamma_count >= 3:
+        print "O1 gamma increase; mag = {0}".format(gamma_sum_mag['O1'])
+    if o2_gamma_count >= 3:
+        print "O2 gamma increase; mag = {0}".format(gamma_sum_mag['O2'])
+
+    print "--------------------"
+
+def main():
     
     gevent.spawn(headset.setup)
     gevent.sleep(1)
+    verify_user()    
+
     try:
         sample_counter = 0
         #populate_csv_header()
 
         # Find mean
-        print "Calculating signal average. Please wait..."
-        find_mean()
+        # print "Calculating signal average. Please wait..."
+        # find_mean()
 
         print "Please check the quality of signals. "
         check_signal_quality.run(headset)
@@ -323,10 +545,10 @@ def main():
                 #fft.write_to_file(fft_dict, start_time)
 
                 # Calculate the magnitude sum of the 5 frequency bands.
-                # Delta = 1-4 [0:1]
-                # Theta = 4-7 [?]
-                # Alpha = 7-13 [2:3]
-                # Beta = 13-30 [4:7]
+                # Delta = 1-4 [0]
+                # Theta = 4-7 [1:2]
+                # Alpha = 7-13 [3:4]
+                # Beta = 13-30 [5:7]
                 # Gamma = 30-64 [8:-1]
                 delta_sum_mag['F3'] = sum(f3_fft[0:1])
                 delta_sum_mag['FC5'] = sum(fc5_fft[0:1])
@@ -343,35 +565,50 @@ def main():
                 delta_sum_mag['FC6'] = sum(fc6_fft[0:1])
                 delta_sum_mag['F4'] = sum(f4_fft[0:1])
 
-                alpha_sum_mag['F3'] = sum(f3_fft[2:3])
-                alpha_sum_mag['FC5'] = sum(fc5_fft[2:3])
-                alpha_sum_mag['AF3'] = sum(af3_fft[2:3])
-                alpha_sum_mag['F7'] = sum(f7_fft[2:3])
-                alpha_sum_mag['T7'] = sum(t7_fft[2:3])
-                alpha_sum_mag['P7'] = sum(p7_fft[2:3])
-                alpha_sum_mag['O1'] = sum(o1_fft[2:3])
-                alpha_sum_mag['O2'] = sum(o2_fft[2:3])
-                alpha_sum_mag['P8'] = sum(p8_fft[2:3])
-                alpha_sum_mag['T8'] = sum(t8_fft[2:3])
-                alpha_sum_mag['F8'] = sum(f8_fft[2:3])
-                alpha_sum_mag['AF4'] = sum(af4_fft[2:3])
-                alpha_sum_mag['FC6'] = sum(fc6_fft[2:3])
-                alpha_sum_mag['F4'] = sum(f4_fft[2:3])
+                theta_sum_mag['F3'] = sum(f3_fft[1:2])
+                theta_sum_mag['FC5'] = sum(fc5_fft[1:2])
+                theta_sum_mag['AF3'] = sum(af3_fft[1:2])
+                theta_sum_mag['F7'] = sum(f7_fft[1:2])
+                theta_sum_mag['T7'] = sum(t7_fft[1:2])
+                theta_sum_mag['P7'] = sum(p7_fft[1:2])
+                theta_sum_mag['O1'] = sum(o1_fft[1:2])
+                theta_sum_mag['O2'] = sum(o2_fft[1:2])
+                theta_sum_mag['P8'] = sum(p8_fft[1:2])
+                theta_sum_mag['T8'] = sum(t8_fft[1:2])
+                theta_sum_mag['F8'] = sum(f8_fft[1:2])
+                theta_sum_mag['AF4'] = sum(af4_fft[1:2])
+                theta_sum_mag['FC6'] = sum(fc6_fft[1:2])
+                theta_sum_mag['F4'] = sum(f4_fft[1:2])
 
-                beta_sum_mag['F3'] = sum(f3_fft[4:7])
-                beta_sum_mag['FC5'] = sum(fc5_fft[4:7])
-                beta_sum_mag['AF3'] = sum(af3_fft[4:7])
-                beta_sum_mag['F7'] = sum(f7_fft[4:7])
-                beta_sum_mag['T7'] = sum(t7_fft[4:7])
-                beta_sum_mag['P7'] = sum(p7_fft[4:7])
-                beta_sum_mag['O1'] = sum(o1_fft[4:7])
-                beta_sum_mag['O2'] = sum(o2_fft[4:7])
-                beta_sum_mag['P8'] = sum(p8_fft[4:7])
-                beta_sum_mag['T8'] = sum(t8_fft[4:7])
-                beta_sum_mag['F8'] = sum(f8_fft[4:7])
-                beta_sum_mag['AF4'] = sum(af4_fft[4:7])
-                beta_sum_mag['FC6'] = sum(fc6_fft[4:7])
-                beta_sum_mag['F4'] = sum(f4_fft[4:7])
+                alpha_sum_mag['F3'] = sum(f3_fft[3:4])
+                alpha_sum_mag['FC5'] = sum(fc5_fft[3:4])
+                alpha_sum_mag['AF3'] = sum(af3_fft[3:4])
+                alpha_sum_mag['F7'] = sum(f7_fft[3:4])
+                alpha_sum_mag['T7'] = sum(t7_fft[3:4])
+                alpha_sum_mag['P7'] = sum(p7_fft[3:4])
+                alpha_sum_mag['O1'] = sum(o1_fft[3:4])
+                alpha_sum_mag['O2'] = sum(o2_fft[3:4])
+                alpha_sum_mag['P8'] = sum(p8_fft[3:4])
+                alpha_sum_mag['T8'] = sum(t8_fft[3:4])
+                alpha_sum_mag['F8'] = sum(f8_fft[3:4])
+                alpha_sum_mag['AF4'] = sum(af4_fft[3:4])
+                alpha_sum_mag['FC6'] = sum(fc6_fft[3:4])
+                alpha_sum_mag['F4'] = sum(f4_fft[3:4])
+
+                beta_sum_mag['F3'] = sum(f3_fft[5:7])
+                beta_sum_mag['FC5'] = sum(fc5_fft[5:7])
+                beta_sum_mag['AF3'] = sum(af3_fft[5:7])
+                beta_sum_mag['F7'] = sum(f7_fft[5:7])
+                beta_sum_mag['T7'] = sum(t7_fft[5:7])
+                beta_sum_mag['P7'] = sum(p7_fft[5:7])
+                beta_sum_mag['O1'] = sum(o1_fft[5:7])
+                beta_sum_mag['O2'] = sum(o2_fft[5:7])
+                beta_sum_mag['P8'] = sum(p8_fft[5:7])
+                beta_sum_mag['T8'] = sum(t8_fft[5:7])
+                beta_sum_mag['F8'] = sum(f8_fft[5:7])
+                beta_sum_mag['AF4'] = sum(af4_fft[5:7])
+                beta_sum_mag['FC6'] = sum(fc6_fft[5:7])
+                beta_sum_mag['F4'] = sum(f4_fft[5:7])
 
                 gamma_sum_mag['F3'] = sum(f3_fft[8:])
                 gamma_sum_mag['FC5'] = sum(fc5_fft[8:])
@@ -388,36 +625,37 @@ def main():
                 gamma_sum_mag['FC6'] = sum(fc6_fft[8:])
                 gamma_sum_mag['F4'] = sum(f4_fft[8:])
 
-                print "Delta Magnitude Sum:"
-                for key in delta_sum_mag.keys():
-                    print key, ":", delta_sum_mag[key]
-                print ""
+                # print "Delta Magnitude Sum:"
+                # for key in delta_sum_mag.keys():
+                #     print key, ":", delta_sum_mag[key]
+                # print ""
 
-                print "Alpha Magnitude Sum:"
-                for key in alpha_sum_mag.keys():
-                    print key, ":", alpha_sum_mag[key]
-                print ""
+                # print "Alpha Magnitude Sum:"
+                # for key in alpha_sum_mag.keys():
+                #     print key, ":", alpha_sum_mag[key]
+                # print ""
 
-                print "Beta Magnitude Sum:"
-                for key in beta_sum_mag.keys():
-                    print key, ":", beta_sum_mag[key]
-                print ""
+                # print "Beta Magnitude Sum:"
+                # for key in beta_sum_mag.keys():
+                #     print key, ":", beta_sum_mag[key]
+                # print ""
 
-                print "Gamma Magnitude Sum:"
-                for key in gamma_sum_mag.keys():
-                    print key, ":", gamma_sum_mag[key]
-                print ""
+                # print "Gamma Magnitude Sum:"
+                # for key in gamma_sum_mag.keys():
+                #     print key, ":", gamma_sum_mag[key]
+                # print ""
 
                 # Determine if a frequency band of F3 has a steady increase in magnitude over 5 ffts
-                if (delta_sum_mag['F3'] > f3_delta_prev_mag):
-                    print "F3 delta increasing in magnitude! mag = {0}".format(delta_sum_mag['F3'])
-                    f3_delta_count += 1
-                else:
-                    f3_delta_count = 0
-                f3_delta_prev_mag = delta_sum_mag['F3']
+                analyze_pattern()
+                # if (delta_sum_mag['F3'] > f3_delta_prev_mag):
+                #     print "F3 delta increasing in magnitude! mag = {0}".format(delta_sum_mag['F3'])
+                #     f3_delta_count += 1
+                # else:
+                #     f3_delta_count = 0
+                # f3_delta_prev_mag = delta_sum_mag['F3']
 
-                if f3_delta_count >= 5:
-                    print "F3 delta has a steady increase in magnitude"
+                # if f3_delta_count >= 5:
+                #     print "F3 delta has a steady increase in magnitude"
 
                 # Clear buffers
                 clear_buffers()
