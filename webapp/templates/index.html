@@ -1,9 +1,175 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<title>Mindcraft</title>
-</head>
-<body>
-	<h1>sup</h1>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="./favicon.ico">
+    <title>Developer GUI</title>
+
+    <link href="../static/stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/stylesheets/navbar-fixed-top.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">Developer GUI</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="container">
+        <div class="page-header">
+          
+        </div>
+       
+		<form class="form-horizontal" role="form">
+		  <div class="form-group">
+		    <label class="control-label col-sm-2" for="userid">User ID:</label>
+		    <div class="col-sm-3">
+		      <input type="email" class="form-control" id="userid" placeholder="">
+		    </div>
+		  </div>
+		  <div class="form-group">
+		    <label class="control-label col-sm-2" for="pwd">Average Power:</label>
+		    <div class="col-sm-3"> 
+		      <input type="avg" class="form-control" id="avg" placeholder="">
+		    </div>
+		  </div>
+		  <div class="form-group"> 
+		    <div class="col-sm-offset-2 col-sm-10">
+		      <button type="submit" class="btn btn-default">Submit</button>
+		    </div>
+		  </div>
+		</form>
+
+		<div class="row">
+	        <div class="col-md-4">
+	          <table class="table table-bordered">
+	            <thead>
+	              <tr>
+	                <th>left</th>
+	                <th>right</th>
+	              </tr>
+	            </thead>
+	            <tbody>
+	              <tr>
+	                <td>AF3</td>
+	                <td>AF4</td>
+	              </tr>
+	              <tr>
+	                <td>F3</td>
+	                <td>F4</td>
+	              </tr>
+	              <tr>
+	                <td>F7</td>
+	                <td>F8</td>
+	              </tr>
+	              <tr>
+	                <td>FC5</td>
+	                <td>FC6</td>
+	              </tr>
+	              <tr>
+	                <td>T7</td>
+	                <td>T8</td>
+	              </tr>
+	              <tr>
+	                <td>P7</td>
+	                <td>P8</td>
+	              </tr>
+	              <tr>
+	                <td>O1</td>
+	                <td>O2</td>
+	              </tr>
+	            </tbody>
+	          </table>
+	        </div>
+	       
+	      </div>
+
+
+        <!-- <div class="row">
+          <canvas id="myChart" width="800" height="400"></canvas>
+        </div> -->
+
+       
+
+
+      <script>
+        var randomScalingFactor = function(){ return Math.round(Math.random()*100)};
+        var dataArray = [randomScalingFactor(), randomScalingFactor()];
+        var lineChartData = {
+          labels : ["0", "1"],
+          datasets : [
+            {
+              label: "My Second dataset",
+              fillColor : "rgba(151,187,205,0.2)",
+              strokeColor : "rgba(151,187,205,1)",
+              pointColor : "rgba(151,187,205,1)",
+              pointStrokeColor : "#fff",
+              pointHighlightFill : "#fff",
+              pointHighlightStroke : "rgba(151,187,205,1)",
+              data : dataArray
+              
+              
+            }
+          ]
+        }
+
+      window.onload = function(){
+        var ctx = document.getElementById("myChart").getContext("2d");
+        window.myLine = new Chart(ctx).Line(lineChartData, {
+          responsive: false,
+          bezierCurve : false,
+          datasetFill : false,
+          pointDot : false,
+          animation: true,
+          animationSteps: 60
+        });
+        var count = 1;
+        window.setInterval(function(){
+          /// call your function here
+          dataArray.push(count);
+          count += 2;
+          if (count >= 30*4) {
+            window.myLine.removeData();
+          };
+          window.myLine.addData([randomScalingFactor()], count);
+          
+        }, 250);
+      }
+
+      </script>
+
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="../static/lib/bootstrap.min.js"></script>
+    <script src="../static/lib/Chart.js"></script>
+  </body>
 </html>
