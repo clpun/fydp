@@ -1,4 +1,4 @@
-##Useage
+#Useage
 
 ##Create
 Create a new streamer: `var streamer = new Streamer();`
