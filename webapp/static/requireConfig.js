@@ -5,13 +5,18 @@ requirejs.config({
         lodash : 'lib/lodash-2.4.1',
         bootstrap : 'lib/bootstrap',
         Chart : 'lib/Chart',
+        socketio : 'lib/socket.io',
         webSocket : 'src/webSocket',
-        main : 'src/main'
+        main : 'src/main',
+        Streamer : 'src/streaming/streamer'
     },
     shim : {
         "bootstrap" : {
             deps : ['jquery'],
             exports : 'Bootstrap'
+        },
+        "socketio" : {
+            exports : 'io'
         }
     }
 });
