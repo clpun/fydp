@@ -7,7 +7,7 @@ Instructions
 `sudo pip install flask-socketio`
 
 ##To run:
-	`python webapp.py`
+	python webapp.py
 
 ##On the browser go to:
-	`localhost:5000`
+	localhost:5000
