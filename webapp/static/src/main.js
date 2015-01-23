@@ -1,4 +1,4 @@
-require(['jquery', 'bootstrap', 'Chart'], function ($) {
+require(['jquery', 'Streamer', 'bootstrap', 'Chart'], function ($, Streamer) {
     $(document).ready(function($) {
 	      $("td").click(function() {
 	      		// toggleClass($(this));
@@ -110,14 +110,30 @@ require(['jquery', 'bootstrap', 'Chart'], function ($) {
     	var randomScalingFactor = function(){ return Math.round(Math.random()*100)};
     	var graphContainer = $('#Delta'+classSelected.attr('id'));
 		var count = 1;
+
+		var streamer = new Streamer();
+        streamer.connect();
+        streamer.request('val');
+
+        $('body').on('bufferUpdated', function () {
+            var value = streamer.consumeData();
+            while (value != undefined) {
+                console.log(value);
+                
+                count += 2;
+				if (count >= 30*4) {
+					graphContainer.data('chart').removeData();
+				};
+				graphContainer.data('chart').addData([value], '');
+                value = streamer.consumeData();
+				
+            }
+        });
+
 	    window.setInterval(function(){
 	      /// call your function here
 	      // dataArray.push(count);
-	      count += 2;
-	      if (count >= 30*4) {
-	        graphContainer.data('chart').removeData();
-	      };
-	      graphContainer.data('chart').addData([randomScalingFactor()], '');
+	      
 	      
 	    }, 250);
     	
