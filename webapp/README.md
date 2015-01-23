@@ -5,6 +5,7 @@ sudo apt-get install python-pip
 
 ##Install Node.js and npm if you have not already
 To install node.js : http://www.nginxtips.com/how-to-install-latest-node-js-version-on-ubuntu-12-04/
+
 To install npm : sudo apt-get install npm
 
 npm config set registry http://registry.npmjs.org/
