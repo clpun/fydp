@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <link rel="icon" href="./favicon.ico">
+<head>
     <title>Developer GUI</title>
 
     <link href="../static/stylesheets/custom.css" rel="stylesheet">
@@ -14,119 +8,100 @@
     <link href="../static/stylesheets/navbar-fixed-top.css" rel="stylesheet">
 
     <script data-main="static/requireConfig" src="static/lib/require.js"></script>
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <!-- Fixed navbar -->
-    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
-      <div class="container">
+<!-- Fixed navbar -->
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
         <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="index.html">Developer GUI</a>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="index.html">Developer GUI</a>
         </div>
-        <div class="navbar-collapse collapse">
-          <ul class="nav navbar-nav">
-            
-          </ul>
-          <ul class="nav navbar-nav navbar-right">
-          </ul>
-        </div>
-      </div>
     </div>
+</div>
+
+<div class="container">
 
     <div class="container">
-
-      <div class="container">
         <div class="page-header">
-          
+
         </div>
-       
-		<form class="form-horizontal" role="form">
-		  <div class="form-group">
-		    <label class="control-label col-sm-2" for="userid">User ID:</label>
-		    <div class="col-sm-3">
-		      <input type="email" class="form-control" id="userid" placeholder="">
-		    </div>
-		  </div>
-		  <div class="form-group">
-		    <label class="control-label col-sm-2" for="pwd">Average Power:</label>
-		    <div class="col-sm-3"> 
-		      <input type="avg" class="form-control" id="avg" placeholder="">
-		    </div>
-		  </div>
-		  <div class="form-group"> 
-		    <div class="col-sm-offset-2 col-sm-10">
-		      <button type="submit" class="btn btn-default">Submit</button>
-		    </div>
-		  </div>
-		</form>
+
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="userid">User ID:</label>
+
+                <div class="col-sm-3">
+                    <input type="email" class="form-control" id="userid" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="pwd">Average Power:</label>
+
+                <div class="col-sm-3">
+                    <input type="avg" class="form-control" id="avg" placeholder="">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </div>
+            </div>
+        </form>
 
 
-		<div class="row">
-	        <div class="col-md-4">
-	          <table class="table table-bordered">
-	            <thead>
-	              <tr>
-	                <th>left</th>
-	                <th>right</th>
-	              </tr>
-	            </thead>
-	            <tbody>
-	              <tr>
-	                <td id="AF3">AF3</td>
-	                <td id='AF4'>AF4</td>
-	              </tr>
-	              <tr>
-	                <td id='F3'>F3</td>
-	                <td id='F4'>F4</td>
-	              </tr>
-	              <tr>
-	                <td id='F7'>F7</td>
-	                <td id='F8'>F8</td>
-	              </tr>
-	              <tr>
-	                <td id='FC5'>FC5</td>
-	                <td id='FC6'>FC6</td>
-	              </tr>
-	              <tr>
-	                <td id='T7'>T7</td>
-	                <td id='T8'>T8</td>
-	              </tr>
-	              <tr>
-	                <td id='P7'>P7</td>
-	                <td id='P8'>P8</td>
-	              </tr>
-	              <tr>
-	                <td id='O1'>O1</td>
-	                <td id='O2'>O2</td>
-	              </tr>
-	            </tbody>
-	          </table>
-	        </div>
-	       
-	      </div>
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>left</th>
+                        <th>right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td id="AF3">AF3</td>
+                        <td id='AF4'>AF4</td>
+                    </tr>
+                    <tr>
+                        <td id='F3'>F3</td>
+                        <td id='F4'>F4</td>
+                    </tr>
+                    <tr>
+                        <td id='F7'>F7</td>
+                        <td id='F8'>F8</td>
+                    </tr>
+                    <tr>
+                        <td id='FC5'>FC5</td>
+                        <td id='FC6'>FC6</td>
+                    </tr>
+                    <tr>
+                        <td id='T7'>T7</td>
+                        <td id='T8'>T8</td>
+                    </tr>
+                    <tr>
+                        <td id='P7'>P7</td>
+                        <td id='P8'>P8</td>
+                    </tr>
+                    <tr>
+                        <td id='O1'>O1</td>
+                        <td id='O2'>O2</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
-
-	      <div id="tables-spot"></div>
-	    
-      <script>
-
-      	
-        
-
-      </script>
-
-    </div> <!-- /container -->
-
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-  </body>
+        </div>
+        <div id="tables-spot"></div>
+    </div>
+    <!-- /container -->
+</body>
 </html>

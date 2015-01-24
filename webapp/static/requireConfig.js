@@ -8,7 +8,9 @@ requirejs.config({
         socketio : 'lib/socket.io',
         webSocket : 'src/webSocket',
         main : 'src/main',
-        Streamer : 'src/streaming/streamer'
+        Streamer : 'src/streaming/streamer',
+        SignalNameEnum : 'src/gui/signalNameEnum',
+        FrequencyPowerTable : 'src/gui/frequencyPowerTable'
     },
     shim : {
         "bootstrap" : {
