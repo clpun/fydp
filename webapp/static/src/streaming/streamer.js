@@ -27,12 +27,19 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
                 self._bufferLock = false;
                 $('body').trigger('bufferUpdated');
             });
+            //console.log('connected from streamer = ' + self.connected);
         },
 
         request : function (req) {
             if (!this.connected) return;
-
+            console.log('requesting data');
             this.socket.emit('request', {data: req});
+        },
+
+        request_userid : function (req) {
+            if (!this.connected) return;
+            //console.log('requesting userid from streamer = ' + req);
+            this.socket.emit('request_userid', {data: req});
         },
 
         consumeData : function () {
