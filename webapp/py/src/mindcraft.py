@@ -1,6 +1,6 @@
 import sys
 #sys.path.append("..")
-import emotiv
+from ..lib import emotiv
 import gevent
 import numpy as np
 import csv
