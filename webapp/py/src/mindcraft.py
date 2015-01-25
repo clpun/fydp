@@ -1,5 +1,5 @@
 import sys
-sys.path.append("..")
+#sys.path.append("..")
 import emotiv
 import gevent
 import numpy as np
@@ -15,8 +15,7 @@ import check_signal_quality
 
 developer_mode = 1
 if developer_mode:
-    import webapp.webapp as devapp
-    import webapp.py.src.developerAPI as devapi
+    import developerAPI as devapi
     from websocket import create_connection
     import socket
 
@@ -35,7 +34,7 @@ class UserPreference:
 user_preference = UserPreference()
 
 # Control Variables
-start_recording = False
+start_recording = True
 
 # Variables for the sum magnitude of the 5 frequency bands. 
 delta_sum_mag = {}
@@ -84,16 +83,6 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
-# TCP_IP = '127.0.0.1'
-# TCP_PORT = 5005
-# BUFFER_SIZE = 1024
-# MESSAGE = "Hello, World!" 
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# s.connect((TCP_IP, TCP_PORT))
-# s.send(MESSAGE)
-# data = s.recv(BUFFER_SIZE)
-# s.close()
-# print "received data:", data
 def set_developer_mode():
     print 'Setting up for Developer mode'
     for path in sys.path:
@@ -101,16 +90,10 @@ def set_developer_mode():
     direc = dir(devapp)
     for d in direc:
         print 'devapp dir = ' + d
-    
-    TCP_IP = '127.0.0.1'
-    TCP_PORT = 5000
-    BUFFER_SIZE = 1024
-    #ws = create_connection("ws://"+TCP_IP+":"+str(TCP_PORT)+"/api")
-    #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s.connect((TCP_IP,TCP_PORT))
-    #ws.send('write_userid')
-    # print 'Initiating web app'
-    # devapp.__main__()
+
+def get_userid():
+    print 'request id = '+str(user_preference.user_name)
+    return str(user_preference.user_name)
 
 def verify_user():
     global user_preference
@@ -239,7 +222,7 @@ def verify_user():
                         # devapp.af4_mean = af4_mean
                         # devapp.fc6_mean = fc6_mean
                         # devapp.f4_mean = f4_mean
-                        devapp.write_userid(user_preference.user_name)
+                        devapi.write_userid(user_preference.user_name)
             except IOError:
                 print "IO Error"
             except RuntimeError:
@@ -484,10 +467,11 @@ def main():
     gevent.spawn(headset.setup)
     gevent.sleep(1)
     global start_recording
-    start_recording = False
+    start_recording = True
     verify_user() 
     if developer_mode:
-        set_developer_mode()
+        #set_developer_mode()
+        pass
     
     try:
         sample_counter = 0
@@ -502,12 +486,13 @@ def main():
         
         #loop_counter = 0
         #trial_length = 32
+        print '~~~~~~~~~~~'
         while True:
             if not start_recording:
                 prompt_start_recording = raw_input("Press any Keys to Start Recording\n")
                 start_recording = True
             else:
-                try:
+                #try:
                     # Retrieve emotiv packet
                     packet = headset.dequeue()
 
@@ -705,35 +690,37 @@ def main():
 
                         # Determine if a freq band of a channel has a steady increase in magnitude over 3 ffts
                         analyze_pattern()
-
                         if developer_mode:
-                            for key in delta_sum_mag.keys():
-                                devapp.write_delta_sum_mag(key,delta_sum_mag[key])
-                            for key in theta_sum_mag.keys():
-                                devapp.write_theta_sum_mag(key,theta_sum_mag[key])
-                            for key in alpha_sum_mag.keys():
-                                devapp.write_alpha_sum_mag(key,alpha_sum_mag[key])
-                            for key in beta_sum_mag.keys():
-                                devapp.write_beta_sum_mag(key,beta_sum_mag[key])
-                            for key in gamma_sum_mag.keys():
-                                devapp.write_gamma_sum_mag(key,gamma_sum_mag[key])
-                            devapp.format_data_to_emit()
+                            # for key in delta_sum_mag.keys():
+                            #     devapi.write_delta_sum_mag(key,delta_sum_mag[key])
+                            # for key in theta_sum_mag.keys():
+                            #     devapi.write_theta_sum_mag(key,theta_sum_mag[key])
+                            # for key in alpha_sum_mag.keys():
+                            #     devapi.write_alpha_sum_mag(key,alpha_sum_mag[key])
+                            # for key in beta_sum_mag.keys():
+                            #     devapi.write_beta_sum_mag(key,beta_sum_mag[key])
+                            # for key in gamma_sum_mag.keys():
+                            #     devapi.write_gamma_sum_mag(key,gamma_sum_mag[key])
+                            power_dict = {'delta':delta_sum_mag,'theta':theta_sum_mag,'alpha':alpha_sum_mag,'beta':beta_sum_mag,'gamma':gamma_sum_mag}
+                            #devapi.format_data_to_emit()
+                            #s = str(devapi.get_all_power())
+                            yield power_dict
                         
                         # Clear buffers
                         clear_buffers()
                         sample_counter = 0
                         #loop_counter = loop_counter + 1
-                except:
-                    pass
+                # except:
+                #     pass
 
-                i,o,e = select.select([sys.stdin],[],[],0.0001)
-                for s in i:
-                    if s == sys.stdin:
-                        #print 'key detected'
-                        sys.stdin.readline()
-                        start_recording = False
-                        clear_buffers()
-                        sample_counter = 0
+                # i,o,e = select.select([sys.stdin],[],[],0.0001)
+                # for s in i:
+                #     if s == sys.stdin:
+                #         #print 'key detected'
+                #         sys.stdin.readline()
+                #         start_recording = False
+                #         clear_buffers()
+                #         sample_counter = 0
 
             gevent.sleep(0)
         

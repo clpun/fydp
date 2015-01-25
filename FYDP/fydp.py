@@ -13,6 +13,8 @@ import signal_preprocessing as sp
 import CSP as csp
 import check_signal_quality
 
+import webapp
+
 headset = emotiv.Emotiv()
 start_time = time.time()
 
@@ -76,6 +78,13 @@ F8Buffer = []
 AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
+
+def add_paths():
+    for path in sys.path:
+        print 'sys.path = ' + path
+    direc = dir(webapp)
+    for d in direc:
+        print 'dir = ' + d
 
 def verify_user():
     global user_preference
@@ -196,6 +205,9 @@ def verify_user():
                 pref_file.close()
         else:
             print "Invalid user id. Please use an alphanumeric id."
+
+def get_userid():
+    return user_preference.user_name
 
 def clear_buffers():
     del F3Buffer[:]
@@ -432,7 +444,8 @@ def main():
     global start_recording
     start_recording = False
     verify_user() 
-
+    add_paths()
+    
     try:
         sample_counter = 0
         #populate_csv_header()
@@ -441,8 +454,8 @@ def main():
         # print "Calculating signal average. Please wait..."
         # find_mean()
 
-        print "Please check the quality of signals. "
-        check_signal_quality.run(headset)
+        #print "Please check the quality of signals. "
+        #check_signal_quality.run(headset)
         
         #loop_counter = 0
         #trial_length = 32

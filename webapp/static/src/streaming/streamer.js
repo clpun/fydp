@@ -36,12 +36,6 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
             this.socket.emit('request', {data: req});
         },
 
-        request_userid : function (req) {
-            if (!this.connected) return;
-            //console.log('requesting userid from streamer = ' + req);
-            this.socket.emit('request_userid', {data: req});
-        },
-
         consumeData : function () {
             if (!this.connected) return;
 
