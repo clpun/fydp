@@ -41,6 +41,7 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
 
             return this.buffer.shift();
         }
+
     };
 
     return Streamer;

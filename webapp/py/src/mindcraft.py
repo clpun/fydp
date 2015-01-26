@@ -691,19 +691,10 @@ def main():
                         # Determine if a freq band of a channel has a steady increase in magnitude over 3 ffts
                         analyze_pattern()
                         if developer_mode:
-                            # for key in delta_sum_mag.keys():
-                            #     devapi.write_delta_sum_mag(key,delta_sum_mag[key])
-                            # for key in theta_sum_mag.keys():
-                            #     devapi.write_theta_sum_mag(key,theta_sum_mag[key])
-                            # for key in alpha_sum_mag.keys():
-                            #     devapi.write_alpha_sum_mag(key,alpha_sum_mag[key])
-                            # for key in beta_sum_mag.keys():
-                            #     devapi.write_beta_sum_mag(key,beta_sum_mag[key])
-                            # for key in gamma_sum_mag.keys():
-                            #     devapi.write_gamma_sum_mag(key,gamma_sum_mag[key])
                             power_dict = {'delta':delta_sum_mag,'theta':theta_sum_mag,'alpha':alpha_sum_mag,'beta':beta_sum_mag,'gamma':gamma_sum_mag}
-                            #devapi.format_data_to_emit()
                             #s = str(devapi.get_all_power())
+                            #print str(power_dict)
+                            print "printing time for every emit = "+str(time.time())
                             yield power_dict
                         
                         # Clear buffers

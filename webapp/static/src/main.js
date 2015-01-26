@@ -36,6 +36,7 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         streamer.request();
         $('body').on('bufferUpdated',function(){
         	var power_dict = streamer.consumeData();
+        	//console.log(power_dict);
         	analyze_data(power_dict);
         });
         $('#submitbtn').click(function(){

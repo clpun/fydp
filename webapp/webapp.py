@@ -32,7 +32,7 @@ def test_disconnect():
     print('Client disconnected')
 
 def __main__():
-	sockets.run(app)
+	sockets.run(app,heartbeat_interval=20000,heartbeat_timeout=20000)
 
 if __name__ == '__main__':
 	sockets.run(app)
