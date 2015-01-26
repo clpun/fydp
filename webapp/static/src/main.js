@@ -1,28 +1,41 @@
-require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'bootstrap', 'Chart'], function ($, Streamer, FrequencyPowerTable, SignalNameEnum) {
-    var fpt;
-    var deltapower;
-	var thetapower;
-	var alphapower;
-	var betapower;
-	var gammapower;
-    $(document).ready(function () {
-        $("td").click(function () {
-            $(this).toggleClass("selected-cell");
-            if ($(this).hasClass('selected-cell')) {
-                fpt = new FrequencyPowerTable($(this).attr('id'));
-                var table = fpt.toHtmlTable();
-                $('#tables-spot').append(table);
-                createDummyChartData(fpt);
-            } else {
-                removeTable($(this));
-            }
+require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash', 'bootstrap', 'Chart'], function ($, Streamer, FrequencyPowerTable, SignalNameEnum, _) {
+//    var fpt;
+//    var deltapower;
+//	var thetapower;
+//	var alphapower;
+//	var betapower;
+//	var gammapower;
+
+    var signalMap = {};
+
+    function putPowerTablesIntoMap() {
+        _(SignalNameEnum.left).mapValues(function(value) {
+            var table = new FrequencyPowerTable(value);
+            $('#tables-spot').append(table.toHtmlTable());
+            signalMap[value] = table;
         });
+        _(SignalNameEnum.right).mapValues(function(value) {
+            var table = new FrequencyPowerTable(value);
+            $('#tables-spot').append(table.toHtmlTable());
+            signalMap[value] = table;
+        });
+    }
+
+    $(document).ready(function () {
+//        $("td").click(function () {
+//            $(this).toggleClass("selected-cell");
+//            if ($(this).hasClass('selected-cell')) {
+//                putPowerTablesIntoMap();
+//            } else {
+//                removeTable($(this));
+//            }
+//        });
+        putPowerTablesIntoMap();
         var streamer = new Streamer();
         streamer.connect();
         streamer.request();
         $('body').on('bufferUpdated',function(){
         	var power_dict = streamer.consumeData();
-        	console.log(power_dict);
         	analyze_data(power_dict);
         });
         $('#submitbtn').click(function(){
@@ -46,14 +59,22 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'bootstr
 		power_dict format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}
     */
     function analyze_data (dict) {
-    	var user = dict['userid'];
-    	if(user != undefined) alert(user)
-    	$('#userid').text(user);
-    	deltapower = ['delta'];
-    	thetapower = ['theta'];
-    	alphapower = ['alpha'];
-    	betapower = ['beta'];
-    	gammapower = ['gamma'];
+        var receivedSignalTypes = _(dict).keys();
+        receivedSignalTypes.forEach(function(signalType) {
+            var sensors = _(dict[signalType]).keys();
+            sensors.forEach(function (sensor) {
+                signalMap[sensor].handleIncomingSignalUpdate(signalType, dict[signalType][sensor]);
+            });
+        });
+
+//    	var user = dict['userid'];
+//    	if(user != undefined) alert(user);
+//    	$('#userid').text(user);
+//    	deltapower = ['delta'];
+//    	thetapower = ['theta'];
+//    	alphapower = ['alpha'];
+//    	betapower = ['beta'];
+//    	gammapower = ['gamma'];
     }
 });
 
