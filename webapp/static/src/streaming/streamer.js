@@ -27,6 +27,10 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
                 self._bufferLock = false;
                 $('body').trigger('bufferUpdated');
             });
+            this.socket.on('disconnect', function() {
+                alert('socket disconnected');
+                self.connect();
+            });
             //console.log('connected from streamer = ' + self.connected);
         },
 
