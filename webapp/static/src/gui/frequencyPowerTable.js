@@ -38,7 +38,7 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
                     .append('<td>' + signalType + '</td>')
                     .append('<td>' + self.getPowerForSignalType(signalType) + '</td>')
                     .append('<td><div class="row"><canvas id="' + signalType + self.signalName + '" width="200" height="200"></canvas></div></td>');
-                self[signalType + 'Chart'] = createChart(row.find('canvas'));
+                self[signalType.toLowerCase() + 'Chart'] = createChart(row.find('canvas'));
                 table.append(row);
             });
             return html.append(tableContainer.append(table));
