@@ -12,9 +12,10 @@ import fft
 import signal_preprocessing as sp
 #import check_signal_quality
 
-developer_mode = 1
-if developer_mode:
+server_testing_mode = 0
+if server_testing_mode:
     import developerAPI as devapi
+    import random
     from websocket import create_connection
     import socket
 
@@ -206,7 +207,7 @@ def verify_user():
                 if not user_verify:
                     print "Something is wrong with the environment offset average variables. Please use another user id."
                 else:
-                    if developer_mode:
+                    if server_testing_mode:
                         # devapp.f3_mean = f3_mean
                         # devapp.fc5_mean = fc5_mean
                         # devapp.af3_mean = af3_mean
@@ -221,7 +222,8 @@ def verify_user():
                         # devapp.af4_mean = af4_mean
                         # devapp.fc6_mean = fc6_mean
                         # devapp.f4_mean = f4_mean
-                        devapi.write_userid(user_preference.user_name)
+                        # devapi.write_userid(user_preference.user_name)
+                        pass
             except IOError:
                 print "IO Error"
             except RuntimeError:
@@ -462,29 +464,33 @@ def analyze_pattern():
     #print "--------------------"
 
 def main():
-    
+    if server_testing_mode:
+        #set_developer_mode()
+        while True:
+            gevent.sleep(0.250)
+            rand_val = random.randrange(0,8000,1)
+            test_data = {'delta':{'F3':rand_val,'FC5':rand_val,'AF3':rand_val,'F7':rand_val,'T7':rand_val,'P7':rand_val,'O1':rand_val,'O2':rand_val,'P8':rand_val,'T8':rand_val,'F8':rand_val,'AF4':rand_val,'FC6':rand_val,'F4':rand_val},
+                'theta':{'F3':rand_val,'FC5':rand_val,'AF3':rand_val,'F7':rand_val,'T7':rand_val,'P7':rand_val,'O1':rand_val,'O2':rand_val,'P8':rand_val,'T8':rand_val,'F8':rand_val,'AF4':rand_val,'FC6':rand_val,'F4':rand_val},
+                'alpha':{'F3':rand_val,'FC5':rand_val,'AF3':rand_val,'F7':rand_val,'T7':rand_val,'P7':rand_val,'O1':rand_val,'O2':rand_val,'P8':rand_val,'T8':rand_val,'F8':rand_val,'AF4':rand_val,'FC6':rand_val,'F4':rand_val},
+                'beta':{'F3':rand_val,'FC5':rand_val,'AF3':rand_val,'F7':rand_val,'T7':rand_val,'P7':rand_val,'O1':rand_val,'O2':rand_val,'P8':rand_val,'T8':rand_val,'F8':rand_val,'AF4':rand_val,'FC6':rand_val,'F4':rand_val},
+                'gamma':{'F3':rand_val,'FC5':rand_val,'AF3':rand_val,'F7':rand_val,'T7':rand_val,'P7':rand_val,'O1':rand_val,'O2':rand_val,'P8':rand_val,'T8':rand_val,'F8':rand_val,'AF4':rand_val,'FC6':rand_val,'F4':rand_val}
+            }
+            #print str(test_data)
+            print "Server Testing Mode: print timestamp for every emit of testdata({0}) = {1}".format(str(rand_val),str(time.time()))
+            yield test_data
+
     gevent.spawn(headset.setup)
     gevent.sleep(1)
     global start_recording
     start_recording = True
     verify_user() 
-    if developer_mode:
-        #set_developer_mode()
-        pass
     
     try:
         sample_counter = 0
-        #populate_csv_header()
-
-        # Find mean
-        # print "Calculating signal average. Please wait..."
-        # find_mean()
 
         #print "Please check the quality of signals. "
         #check_signal_quality.run(headset)
-        
-        #loop_counter = 0
-        #trial_length = 32
+
         print '~~~~~~~~~~~'
         while True:
             if not start_recording:
@@ -689,17 +695,15 @@ def main():
 
                         # Determine if a freq band of a channel has a steady increase in magnitude over 3 ffts
                         analyze_pattern()
-                        if developer_mode:
-                            power_dict = {'delta':delta_sum_mag,'theta':theta_sum_mag,'alpha':alpha_sum_mag,'beta':beta_sum_mag,'gamma':gamma_sum_mag}
-                            #s = str(devapi.get_all_power())
-                            #print str(power_dict)
-                            print "printing time for every emit = "+str(time.time())
-                            yield power_dict
+                        power_dict = {'delta':delta_sum_mag,'theta':theta_sum_mag,'alpha':alpha_sum_mag,'beta':beta_sum_mag,'gamma':gamma_sum_mag}
+                        #s = str(devapi.get_all_power())
+                        #print str(power_dict)
+                        print "printing time for every emit = "+str(time.time())
+                        yield power_dict
                         
                         # Clear buffers
                         clear_buffers()
                         sample_counter = 0
-                        #loop_counter = loop_counter + 1
                 # except:
                 #     pass
 
