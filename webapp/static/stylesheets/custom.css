@@ -1,3 +1,7 @@
 .selected-cell {
    background: #FF0000; /* Or some other color */
 }
+
+#sensor_table td:hover {
+    cursor: pointer;
+}

@@ -34,10 +34,14 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
             //console.log('connected from streamer = ' + self.connected);
         },
 
-        request : function (req) {
+        request : function (eventName, req) {
             if (!this.connected) return;
             console.log('requesting data');
-            this.socket.emit('request', {data: req});
+            this.socket.emit(eventName, {data: req});
+        },
+
+        stop : function () {
+            this.socket.disconnect();
         },
 
         consumeData : function () {

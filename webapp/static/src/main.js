@@ -1,12 +1,8 @@
-require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash', 'bootstrap', 'Chart'], function ($, Streamer, FrequencyPowerTable, SignalNameEnum, _) {
-//    var fpt;
-//    var deltapower;
-//	var thetapower;
-//	var alphapower;
-//	var betapower;
-//	var gammapower;
-
+require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash', 'bootstrap'], function ($, Streamer, FrequencyPowerTable, SignalNameEnum, _) {
     var signalMap = {};
+    var streamerRunning = false;
+    var streamer = new Streamer();
+    var REQUEST_NAME = 'request_test_data'; // For actual data use: 'request'
 
     function putPowerTablesIntoMap() {
         _(SignalNameEnum.left).mapValues(function(value) {
@@ -21,61 +17,55 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         });
     }
 
-    $(document).ready(function () {
-//        $("td").click(function () {
-//            $(this).toggleClass("selected-cell");
-//            if ($(this).hasClass('selected-cell')) {
-//                putPowerTablesIntoMap();
-//            } else {
-//                removeTable($(this));
-//            }
-//        });
-        putPowerTablesIntoMap();
-        var streamer = new Streamer();
+    function runStreamer () {
+        if (streamerRunning) return;
+        streamerRunning = true;
+
         streamer.connect();
-        streamer.request();
+        streamer.request(REQUEST_NAME);
         $('body').on('bufferUpdated',function(){
         	var power_dict = streamer.consumeData();
         	console.log(power_dict);
         	analyze_data(power_dict);
         });
-        $('#submitbtn').click(function(){
-	        console.log('clicked');
-	        // streamer.request();
-	        // console.log('after click');
-    	});
-    });
-
-    function createDummyChartData(fpt) {
-        for (var i = 0; i < 20; i++)
-            fpt.handleIncomingSignalUpdate(SignalNameEnum.signalTypes.Alpha, Math.floor(Math.random() * 100))
     }
 
-    function removeTable (classSelected) {
-        var classToRemove = classSelected.attr('id');
-        $('#' + classToRemove + '-table').remove();
+    $(document).ready(function () {
+        $("#sensor_table").on('click', 'td', function (event) {
+            var $td = $(event.target);
+            var sensorName = $td.text();
+
+            $td.toggleClass("selected-cell");
+            if ($td.hasClass('selected-cell')) {
+                var frequencyPowerTable = new FrequencyPowerTable(sensorName);
+                $('#tables-spot').append(frequencyPowerTable.toHtmlTable());
+                signalMap[sensorName] = frequencyPowerTable;
+
+                runStreamer();
+            } else {
+                removeTable(sensorName);
+                signalMap[sensorName] = undefined;
+                if (_(signalMap).values().compact().size() === 0) {
+                    streamer.stop();
+                }
+            }
+        });
+    });
+
+    function removeTable (sensorName) {
+        $('#' + sensorName + '-table').remove();
     }
 
     /*
 		power_dict format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}
     */
-    function analyze_data (dict) {
-        var receivedSignalTypes = _(dict).keys();
-        receivedSignalTypes.forEach(function(signalType) {
-            var sensors = _(dict[signalType]).keys();
-            sensors.forEach(function (sensor) {
-                signalMap[sensor].handleIncomingSignalUpdate(signalType, dict[signalType][sensor]);
-            });
+    function analyze_data (signals) {
+        _.forOwn(signalMap, function(frequencyPowerTable, sensorName) {
+            if (frequencyPowerTable !== undefined) {
+                _(SignalNameEnum.signalTypes).mapValues(function (signalType) {
+                    frequencyPowerTable.handleIncomingSignalUpdate(signalType, signals[signalType.toLowerCase()][sensorName]);
+                });
+            }
         });
-
-//    	var user = dict['userid'];
-//    	if(user != undefined) alert(user);
-//    	$('#userid').text(user);
-//    	deltapower = ['delta'];
-//    	thetapower = ['theta'];
-//    	alphapower = ['alpha'];
-//    	betapower = ['beta'];
-//    	gammapower = ['gamma'];
     }
 });
-

@@ -53,7 +53,7 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
         },
 
         handleIncomingSignalUpdate : function (signalType, value) {
-            var currentChart = this[signalType + 'Chart'];
+            var currentChart = this[signalType.toLowerCase() + 'Chart'];
             currentChart.addData([value], '');
         }
     };
