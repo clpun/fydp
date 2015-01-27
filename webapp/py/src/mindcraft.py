@@ -10,8 +10,7 @@ import os
 import select
 import fft
 import signal_preprocessing as sp
-import CSP as csp
-import check_signal_quality
+#import check_signal_quality
 
 developer_mode = 1
 if developer_mode:

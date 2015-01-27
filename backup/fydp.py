@@ -1,6 +1,6 @@
 import sys
 sys.path.append("..")
-import emotiv
+from lib import emotiv
 import gevent
 import numpy as np
 import csv
@@ -10,7 +10,7 @@ import os
 import select
 import fft
 import signal_preprocessing as sp
-import CSP as csp
+# import CSP as csp
 import check_signal_quality
 
 import webapp
@@ -80,11 +80,11 @@ FC6Buffer = []
 F4Buffer = []
 
 def add_paths():
-    for path in sys.path:
-        print 'sys.path = ' + path
+    '''for path in sys.path:
+        print 'sys.path = ' + path'''
     direc = dir(webapp)
-    for d in direc:
-        print 'dir = ' + d
+    '''for d in direc:
+        print 'dir = ' + d'''
 
 def verify_user():
     global user_preference
