@@ -24,7 +24,7 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
                 id : this.signalName + '-table',
                 class : 'row'
             });
-            var tableContainer = $('<div class="col-md-4"><h3>' + this.signalName + '</h3></div>');
+            var tableContainer = $('<div class="col-md-10"><h3>' + this.signalName + '</h3></div>');
             var table = $('<table class="table table-bordered"/>');
             var row = $('<tr/>')
                     .append('<th>Frequency</th>')
@@ -37,7 +37,7 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
                 row = $('<tr/>')
                     .append('<td>' + signalType + '</td>')
                     .append('<td>' + self.getPowerForSignalType(signalType) + '</td>')
-                    .append('<td><div class="row"><canvas id="' + signalType + self.signalName + '" width="200" height="200"></canvas></div></td>');
+                    .append('<td><div class="row"><canvas id="' + signalType + self.signalName + '" width="800" height="200"></canvas></div></td>');
                 self[signalType.toLowerCase() + 'Chart'] = createChart(row.find('canvas'));
                 table.append(row);
             });
