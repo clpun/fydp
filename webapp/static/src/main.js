@@ -31,6 +31,11 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
     }
 
     $(document).ready(function () {
+        if (window.navigator.platform && window.navigator.platform.indexOf('Mac') !== -1)
+            switchDebugMode($('#debug-switch'));
+
+        $("#debug-switch").on('click', switchDebugMode);
+
         $("#sensor_table").on('click', 'td', function (event) {
             var $td = $(event.target);
             var sensorName = $td.text();
@@ -51,6 +56,21 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
             }
         });
     });
+
+    function switchDebugMode ($btn) {
+        if (!($btn instanceof jQuery))
+            $btn = $($btn.target);
+
+        if ($btn.hasClass('on')) {
+            $btn.removeClass('on');
+            $btn.text('Debug Mode: OFF');
+            REQUEST_NAME = 'request';
+        } else {
+            $btn.addClass('on');
+            $btn.text('Debug Mode: ON');
+            REQUEST_NAME = 'request_test_data';
+        }
+    }
 
     function removeTable (sensorName) {
         $('#' + sensorName + '-table').remove();

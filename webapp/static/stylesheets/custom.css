@@ -5,3 +5,12 @@
 #sensor_table td:hover {
     cursor: pointer;
 }
+
+#debug-switch {
+    transition: background-color 0.3s;
+}
+
+#debug-switch.on {
+    background-color: red;
+    transition: background-color 0.3s;
+}
