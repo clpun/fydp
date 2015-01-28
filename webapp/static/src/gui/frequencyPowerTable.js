@@ -54,7 +54,12 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
 
         handleIncomingSignalUpdate : function (signalType, value) {
             var currentChart = this[signalType.toLowerCase() + 'Chart'];
+            if (currentChart.signalCount > 30) {
+                currentChart.removeData();
+            };
             currentChart.addData([value], '');
+            currentChart.signalCount += 1;
+            
         }
     };
 
@@ -73,14 +78,17 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             }]
         };
         var ctx = canvas[0].getContext("2d");
-        return new Chart(ctx).Line(lineChartData, {
+        var chart = new Chart(ctx).Line(lineChartData, {
             responsive: false,
             bezierCurve: false,
             datasetFill: false,
             pointDot: false,
-            animation: true,
-            animationSteps: 60
+            animation: false,
+            showTooltips: false,
+            animationSteps: 10
         });
+        chart.signalCount = 0;
+        return chart;
     }
 
     return FrequencyPowerTable;
