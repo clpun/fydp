@@ -36,16 +36,12 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             _(SignalNameEnum.signalTypes).mapValues(function(signalType) {
                 row = $('<tr/>')
                     .append('<td>' + signalType + '</td>')
-                    .append('<td>' + self.getPowerForSignalType(signalType) + '</td>')
+                    .append('<td><div id="' + self.signalName + signalType + 'Power" align="center"></div></td>')
                     .append('<td><div class="row"><canvas id="' + signalType + self.signalName + '" width="800" height="200"></canvas></div></td>');
                 self[signalType.toLowerCase() + 'Chart'] = createChart(row.find('canvas'));
                 table.append(row);
             });
             return html.append(tableContainer.append(table));
-        },
-
-        getPowerForSignalType : function (signalType) {
-            return this[signalType.toLowerCase() + 'Power'];
         },
 
         getSignalForType : function (signalType) {
@@ -59,7 +55,7 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             };
             currentChart.addData([value], '');
             currentChart.signalCount += 1;
-            
+            $('#'+this.signalName+signalType+'Power').text(value);
         }
     };
 

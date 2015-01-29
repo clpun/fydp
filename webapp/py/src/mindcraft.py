@@ -31,9 +31,11 @@ class UserPreference:
     def read_env_offset_avg_var(self,name):
         return self.env_offset_avg_var[name]
 
+
 user_preference = UserPreference()
 
 # Control Variables
+start_streaming = True
 start_recording = True
 
 # Variables for the sum magnitude of the 5 frequency bands. 
@@ -90,6 +92,10 @@ def set_developer_mode():
     direc = dir(devapp)
     for d in direc:
         print 'devapp dir = ' + d
+
+def stop_streaming():
+    # print "mindcraft log : Stop Streaming Live Data"
+    start_streaming = False
 
 def get_userid():
     print 'request id = '+str(user_preference.user_name)
@@ -479,6 +485,8 @@ def main():
             print "Server Testing Mode: print timestamp for every emit of testdata({0}) = {1}".format(str(rand_val),str(time.time()))
             yield test_data
 
+    global start_streaming
+    start_streaming = True
     gevent.spawn(headset.setup)
     gevent.sleep(1)
     global start_recording
@@ -492,7 +500,7 @@ def main():
         #check_signal_quality.run(headset)
 
         print '~~~~~~~~~~~'
-        while True:
+        while start_streaming:
             if not start_recording:
                 prompt_start_recording = raw_input("Press any Keys to Start Recording\n")
                 start_recording = True
