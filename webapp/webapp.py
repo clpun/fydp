@@ -26,7 +26,7 @@ def connected():
     print 'Client connected'
     if data_emitter_thread is None:
         print 'Starting headset_data_handler'
-        data_emitted_thread = thread.start_new_thread(headset_data_handler, ())
+        data_emitter_thread = thread.start_new_thread(headset_data_handler, ())
 
 
 def headset_data_handler():
