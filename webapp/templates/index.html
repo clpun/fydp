@@ -8,6 +8,13 @@
     <link href="../static/stylesheets/navbar-fixed-top.css" rel="stylesheet">
 
     <script data-main="static/requireConfig" src="static/lib/require.js"></script>
+
+    <style>
+		input[type="number"] {
+			width:100px;
+			height:30px;
+		}
+    </style>
 </head>
 
 <body>
@@ -35,16 +42,15 @@
 <div class="container">
 
     <div class="container">
-        <div class="page-header">
+        <!--div class="page-header">
 
-        </div>
+        </div-->
 
-        <form class="form-horizontal" role="form">
+        <!--form class="form-horizontal" role="form">
             <div class="form-group">
                 <label class="control-label col-sm-2" for="userid">User ID:</label>
 
                 <div class="col-sm-3">
-                    <!--input type="email" class="form-control" id="userid" placeholder=""-->
                     <label class="form-control" id="userid" align='center'></label>
                 </div>
             </div>
@@ -60,12 +66,13 @@
                     <a class="btn btn-default" href="#" id="submitbtn">Submit</a>
                 </div>
             </div>
-        </form>
-
-
+        </form-->
+        <a href="#" id="cont-timed-switch" type="button" class="btn btn-default">Continuous Mode</a>
+        <input maxlength="8" type="number" class="form-control" id="timed-mode-input" placeholder="">
+        <button type="button" id="reset-btn">Reset</button>
         <div class="row">
             <div class="col-md-4">
-                <table id="sensor_table" class="table table-bordered">
+                <!--table id="sensor_table" class="table table-bordered">
                     <thead>
                     <tr>
                         <th>left</th>
@@ -102,7 +109,13 @@
                         <td id='O2'>O2</td>
                     </tr>
                     </tbody>
-                </table>
+                </table-->
+                <form id="sensor_checkbox" action="">
+					<li width="500px">Left&nbsp;&nbsp;
+					<input type="checkbox" name="Left" value="AF3">AF3&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="F3">F3&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="F7">F7&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="FC5">FC5&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="T7">T7&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="P7">P7&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Left" value="O1">O1</li><br>
+					<li width="500px">Right&nbsp;&nbsp;
+					<input type="checkbox" name="Right" value="AF4">AF4&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="F4">F4&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="F8">F8&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="FC6">FC6&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="T8">T8&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="P8">P8&nbsp;&nbsp;&nbsp;<input type="checkbox" name="Right" value="O2">O2</li>
+				</form>
             </div>
 
         </div>

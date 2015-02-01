@@ -2,7 +2,9 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
     var signalMap = {};
     var streamerRunning = false;
     var streamer = new Streamer();
-    var REQUEST_NAME = 'request_test_data'; // For actual data use: 'request'
+    var REQUEST_NAME = 'request'; // For actual data use: 'request'
+    var contMode = true;
+    var startTimedMode = false;
 
     function putPowerTablesIntoMap() {
         _(SignalNameEnum.left).mapValues(function(value) {
@@ -36,7 +38,33 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
 
         $("#debug-switch").on('click', switchDebugMode);
 
-        $("#sensor_table").on('click', 'td', function (event) {
+        /*$(":checkbox").change(function(){
+        	console.log('Hi');
+        	if(this.checked) {
+        		console.log('checkbox');
+        		console.log(this.value);
+        	}
+        });*/
+		$('#cont-timed-switch').on('click', switchContMode);
+		$('#reset-btn').on('click', resetBtn);
+        $("#sensor_checkbox").on('change',':checkbox',function (event){
+        	var sensorName = this.value;
+        	if(this.checked) {
+        		var frequencyPowerTable = new FrequencyPowerTable(sensorName);
+                $('#tables-spot').append(frequencyPowerTable.toHtmlTable());
+                signalMap[sensorName] = frequencyPowerTable;
+
+                runStreamer();
+        	} else {
+        		removeTable(sensorName);
+                signalMap[sensorName] = undefined;
+                if (_(signalMap).values().compact().size() === 0) {
+                    streamer.stop();
+                }
+        	}
+        });
+
+        /*$("#sensor_table").on('click', 'td', function (event) {
             var $td = $(event.target);
             var sensorName = $td.text();
 
@@ -54,8 +82,48 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
                     streamer.stop();
                 }
             }
-        });
+        });*/
     });
+	
+	function resetBtn ($btn) {
+		if(contMode) {
+			console.log('Reset');
+		} else {
+			console.log('Timed Mode');
+			if(startTimedMode) {
+				$('#reset-btn').text('Start');
+				startTimedMode = false;
+			} else {
+				$('#reset-btn').text('Stop');
+				var timedsec = $('#timed-mode-input').val();
+				if (!$.isNumeric(timedsec)) {
+					$('#timed-mode-input').val(30);
+					timedsec = $('#timed-mode-input').val();
+				}
+				console.log("Timed Mode : " + timedsec);
+				startTimedMode = true;
+			}
+		}
+	}
+
+	function switchContMode ($btn) {
+        if (!($btn instanceof jQuery))
+            $btn = $($btn.target);
+
+        if ($btn.hasClass('on')) {
+            $btn.removeClass('on');
+            $btn.text('Continuous Mode');
+            console.log("Continuous Mode");
+            $('#reset-btn').text('Reset');
+            contMode = true;
+        } else {
+            $btn.addClass('on');
+            $btn.text('Timed Mode');
+            startTimedMode = false;
+            $('#reset-btn').text('Start');
+            contMode = false;
+        }
+    }
 
     function switchDebugMode ($btn) {
         if (!($btn instanceof jQuery))

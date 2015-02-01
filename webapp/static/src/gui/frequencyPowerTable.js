@@ -27,17 +27,17 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             var tableContainer = $('<div class="col-md-10"><h3>' + this.signalName + '</h3></div>');
             var table = $('<table class="table table-bordered"/>');
             var row = $('<tr/>')
-                    .append('<th>Frequency</th>')
-                    .append('<th>Power</th>')
+                    //.append('<th>Frequency</th>')
+                    //.append('<th>Power</th>')
                     .append('<th>Power Graph</th>');
             table.append(row);
 
             var self = this;
             _(SignalNameEnum.signalTypes).mapValues(function(signalType) {
                 row = $('<tr/>')
-                    .append('<td>' + signalType + '</td>')
-                    .append('<td><div id="' + self.signalName + signalType + 'Power" align="center"></div></td>')
-                    .append('<td><div class="row"><canvas id="' + signalType + self.signalName + '" width="800" height="200"></canvas></div></td>');
+                    //.append('<td>' + signalType + '</td>')
+                    //.append('<td><div id="' + self.signalName + signalType + 'Power" align="center"></div></td>')
+                    .append('<td width="1000px"><div>'+signalType+'&nbsp;&nbsp;(<label id="' + self.signalName + signalType + 'Power"></label>)</div><div class="row" style="margin: auto;"><canvas id="' + signalType + self.signalName + '" width="900" height="200"></canvas></div></td>');
                 self[signalType.toLowerCase() + 'Chart'] = createChart(row.find('canvas'));
                 table.append(row);
             });
