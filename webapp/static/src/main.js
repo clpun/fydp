@@ -22,7 +22,7 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         streamerRunning = true;
 
         streamer.connect();
-        streamer.request(REQUEST_NAME);
+        //streamer.request(REQUEST_NAME);
         $('body').on('bufferUpdated',function(){
         	var power_dict = streamer.consumeData();
         	console.log(power_dict);
@@ -57,6 +57,11 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         });
     });
 
+    var request = function(request) {
+        var endpoint = '//' + document.domain + ':' + location.port + '/';
+        $.get(endpoint + request);
+    };
+
     function switchDebugMode ($btn) {
         if (!($btn instanceof jQuery))
             $btn = $($btn.target);
@@ -64,11 +69,11 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         if ($btn.hasClass('on')) {
             $btn.removeClass('on');
             $btn.text('Debug Mode: OFF');
-            REQUEST_NAME = 'request';
+            request('disable_test_mode');
         } else {
             $btn.addClass('on');
             $btn.text('Debug Mode: ON');
-            REQUEST_NAME = 'request_test_data';
+            request('enable_test_mode');
         }
     }
 
