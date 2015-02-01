@@ -264,6 +264,7 @@ def find_mean():
 
     while counter < 1000:
         # Retrieve emotiv packet
+        headset = emotiv.Emotiv()
         packet = headset.dequeue()
 
         # Get sensor data
@@ -487,6 +488,7 @@ def main():
 
     global start_streaming
     start_streaming = True
+    headset = emotiv.Emotiv()
     gevent.spawn(headset.setup)
     gevent.sleep(1)
     global start_recording
