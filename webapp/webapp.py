@@ -22,11 +22,8 @@ def run_server():
 
 @sockets.on('connect', namespace='/api')
 def connected():
-    global data_emitter_thread
     print 'Client connected'
-    if data_emitter_thread is None:
-        print 'Starting headset_data_handler'
-        data_emitter_thread = thread.start_new_thread(headset_data_handler, ())
+    start_streaming()
 
 
 def headset_data_handler():
@@ -34,12 +31,12 @@ def headset_data_handler():
     while not stop_streaming_event.isSet():
         if test_mode:
             for data_point in test_data_generator.generate_data():
-                if not test_mode:
+                if not test_mode or stop_streaming_event.isSet():
                     break
                 sockets.emit('response', {'data': data_point}, namespace='/api')
         else:
             for data_point in mindcraft.main():
-                if test_mode:
+                if test_mode or stop_streaming_event.isSet():
                     break
                 sockets.emit('response', {'data': data_point}, namespace='/api')
 
@@ -52,6 +49,26 @@ def index():
 @app.route('/webSoc', methods=['GET'])
 def web_soc_fun():
     return render_template('websocket.html')
+
+
+# TODO: combine these two?
+@app.route('/start_streaming')
+def start_streaming():
+    global stop_streaming_event
+    global data_emitter_thread
+    if data_emitter_thread is None:
+        stop_streaming_event.clear()
+        print 'Starting headset_data_handler'
+        data_emitter_thread = thread.start_new_thread(headset_data_handler, ())
+    return jsonify(streaming=True)
+
+@app.route('/stop_streaming')
+def stop_streaming():
+    global stop_streaming_event
+    global data_emitter_thread
+    stop_streaming_event.set()
+    data_emitter_thread = None
+    return jsonify(streaming=False)
 
 
 # TODO: combine these two?
