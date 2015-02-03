@@ -60,13 +60,13 @@ def write_to_file(data_set, start_time):
 
 def compute_fft(data):
 	#Check frequencies
-	'''timestep = 1/128.0
-	freq = np.fft.fftfreq(data.size, d=timestep)
-	print "Frequencies: "+str(freq)'''
+	timestep = 1/128.0
+	freq = np.fft.fftfreq(128, d=timestep)
+	#print "Frequencies: "+str(freq)
 
 	# Comput fft amplitude spectrum
-	y = np.fft.fft(data)
-	length_y = len(y)
+	y = np.fft.fft(data, 128)
+	length_y = 128
 
 	# Return the positive frequency components
 	return np.absolute(y[0:(length_y/2)+1])
