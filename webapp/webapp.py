@@ -16,9 +16,9 @@ test_data_generator = TestDataGenerator()
 channels = ['F3','FC5','AF3','F7','T7','P7','O1','O2','P8','T8','F8','AF4','FC6','F4']
 bands = ['gamma','beta','alpha','theta','delta']
 
-samplingPeriod = 0.25
-duration = 30
-recordingDuration = 0
+samplingPeriod = mindcraft.fftSamplingNum/128.0
+duration = 30.0
+recordingDuration = 0.0
 stop_streaming_event = Event()
 start_recording_event = Event()
 data_emitter_thread = None
@@ -49,7 +49,7 @@ def headset_data_handler():
                 if not test_mode or stop_streaming_event.isSet():
                     break
                 if start_recording_event.isSet():
-                	print "recording... = " + str(recordingDuration*100/duration) + "%"
+                	print "recording... = " + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
                 	if recordingDuration >= duration:
                 		stop_recording()
                 	# data_point format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}
@@ -62,7 +62,7 @@ def headset_data_handler():
                 if test_mode or stop_streaming_event.isSet():
                     break
                 if start_recording_event.isSet():
-                	print "recording... = " + str(recordingDuration*100/duration) + "%"
+                	print "recording... = " + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
                 	if recordingDuration >= duration:
                 		stop_recording()
                 	# data_point format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}

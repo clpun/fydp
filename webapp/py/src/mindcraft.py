@@ -12,6 +12,8 @@ import fft
 import signal_preprocessing as sp
 #import check_signal_quality
 
+fftSamplingNum = 26
+
 server_testing_mode = 0
 if server_testing_mode:
     import developerAPI as devapi
@@ -414,7 +416,7 @@ def main():
             sample_counter = sample_counter + 1
 
             # Do FFT for each sensor after collecting 32 samples
-            if sample_counter > 32:
+            if sample_counter > fftSamplingNum:
                 # Remove high frequency noise and dc offset
                 F3Buffer_clean = sp.preprocess(F3Buffer, f3_mean)
                 FC5Buffer_clean = sp.preprocess(FC5Buffer, fc5_mean)
@@ -466,85 +468,85 @@ def main():
                 }'''
 
                 # Calculate the magnitude sum of the 5 frequency bands.
-                # Delta = 1-4 Hz [0]
-                # Theta = 4-7 Hz [1:2]
-                # Alpha = 7-13 Hz [3:4]
-                # Beta = 13-30 Hz [5:7]
-                # Gamma = 30-64 Hz [8:-1]
-                delta_sum_mag['F3'] = sum(f3_fft[0:1])
-                delta_sum_mag['FC5'] = sum(fc5_fft[0:1])
-                delta_sum_mag['AF3'] = sum(af3_fft[0:1])
-                delta_sum_mag['F7'] = sum(f7_fft[0:1])
-                delta_sum_mag['T7'] = sum(t7_fft[0:1])
-                delta_sum_mag['P7'] = sum(p7_fft[0:1])
-                delta_sum_mag['O1'] = sum(o1_fft[0:1])
-                delta_sum_mag['O2'] = sum(o2_fft[0:1])
-                delta_sum_mag['P8'] = sum(p8_fft[0:1])
-                delta_sum_mag['T8'] = sum(t8_fft[0:1])
-                delta_sum_mag['F8'] = sum(f8_fft[0:1])
-                delta_sum_mag['AF4'] = sum(af4_fft[0:1])
-                delta_sum_mag['FC6'] = sum(fc6_fft[0:1])
-                delta_sum_mag['F4'] = sum(f4_fft[0:1])
+                # Delta = 1-3 Hz [0:3]
+                # Theta = 4-7 Hz [4:7]
+                # Alpha = 8-15 Hz [8:15]
+                # Beta = 16-31 Hz [16:31]
+                # Gamma = 32-64 Hz [32:-1]
+                delta_sum_mag['F3'] = sum(f3_fft[0:3])
+                delta_sum_mag['FC5'] = sum(fc5_fft[0:3])
+                delta_sum_mag['AF3'] = sum(af3_fft[0:3])
+                delta_sum_mag['F7'] = sum(f7_fft[0:3])
+                delta_sum_mag['T7'] = sum(t7_fft[0:3])
+                delta_sum_mag['P7'] = sum(p7_fft[0:3])
+                delta_sum_mag['O1'] = sum(o1_fft[0:3])
+                delta_sum_mag['O2'] = sum(o2_fft[0:3])
+                delta_sum_mag['P8'] = sum(p8_fft[0:3])
+                delta_sum_mag['T8'] = sum(t8_fft[0:3])
+                delta_sum_mag['F8'] = sum(f8_fft[0:3])
+                delta_sum_mag['AF4'] = sum(af4_fft[0:3])
+                delta_sum_mag['FC6'] = sum(fc6_fft[0:3])
+                delta_sum_mag['F4'] = sum(f4_fft[0:3])
 
-                theta_sum_mag['F3'] = sum(f3_fft[1:2])
-                theta_sum_mag['FC5'] = sum(fc5_fft[1:2])
-                theta_sum_mag['AF3'] = sum(af3_fft[1:2])
-                theta_sum_mag['F7'] = sum(f7_fft[1:2])
-                theta_sum_mag['T7'] = sum(t7_fft[1:2])
-                theta_sum_mag['P7'] = sum(p7_fft[1:2])
-                theta_sum_mag['O1'] = sum(o1_fft[1:2])
-                theta_sum_mag['O2'] = sum(o2_fft[1:2])
-                theta_sum_mag['P8'] = sum(p8_fft[1:2])
-                theta_sum_mag['T8'] = sum(t8_fft[1:2])
-                theta_sum_mag['F8'] = sum(f8_fft[1:2])
-                theta_sum_mag['AF4'] = sum(af4_fft[1:2])
-                theta_sum_mag['FC6'] = sum(fc6_fft[1:2])
-                theta_sum_mag['F4'] = sum(f4_fft[1:2])
+                theta_sum_mag['F3'] = sum(f3_fft[4:7])
+                theta_sum_mag['FC5'] = sum(fc5_fft[4:7])
+                theta_sum_mag['AF3'] = sum(af3_fft[4:7])
+                theta_sum_mag['F7'] = sum(f7_fft[4:7])
+                theta_sum_mag['T7'] = sum(t7_fft[4:7])
+                theta_sum_mag['P7'] = sum(p7_fft[4:7])
+                theta_sum_mag['O1'] = sum(o1_fft[4:7])
+                theta_sum_mag['O2'] = sum(o2_fft[4:7])
+                theta_sum_mag['P8'] = sum(p8_fft[4:7])
+                theta_sum_mag['T8'] = sum(t8_fft[4:7])
+                theta_sum_mag['F8'] = sum(f8_fft[4:7])
+                theta_sum_mag['AF4'] = sum(af4_fft[4:7])
+                theta_sum_mag['FC6'] = sum(fc6_fft[4:7])
+                theta_sum_mag['F4'] = sum(f4_fft[4:7])
 
-                alpha_sum_mag['F3'] = sum(f3_fft[3:4])
-                alpha_sum_mag['FC5'] = sum(fc5_fft[3:4])
-                alpha_sum_mag['AF3'] = sum(af3_fft[3:4])
-                alpha_sum_mag['F7'] = sum(f7_fft[3:4])
-                alpha_sum_mag['T7'] = sum(t7_fft[3:4])
-                alpha_sum_mag['P7'] = sum(p7_fft[3:4])
-                alpha_sum_mag['O1'] = sum(o1_fft[3:4])
-                alpha_sum_mag['O2'] = sum(o2_fft[3:4])
-                alpha_sum_mag['P8'] = sum(p8_fft[3:4])
-                alpha_sum_mag['T8'] = sum(t8_fft[3:4])
-                alpha_sum_mag['F8'] = sum(f8_fft[3:4])
-                alpha_sum_mag['AF4'] = sum(af4_fft[3:4])
-                alpha_sum_mag['FC6'] = sum(fc6_fft[3:4])
-                alpha_sum_mag['F4'] = sum(f4_fft[3:4])
+                alpha_sum_mag['F3'] = sum(f3_fft[8:15])
+                alpha_sum_mag['FC5'] = sum(fc5_fft[8:15])
+                alpha_sum_mag['AF3'] = sum(af3_fft[8:15])
+                alpha_sum_mag['F7'] = sum(f7_fft[8:15])
+                alpha_sum_mag['T7'] = sum(t7_fft[8:15])
+                alpha_sum_mag['P7'] = sum(p7_fft[8:15])
+                alpha_sum_mag['O1'] = sum(o1_fft[8:15])
+                alpha_sum_mag['O2'] = sum(o2_fft[8:15])
+                alpha_sum_mag['P8'] = sum(p8_fft[8:15])
+                alpha_sum_mag['T8'] = sum(t8_fft[8:15])
+                alpha_sum_mag['F8'] = sum(f8_fft[8:15])
+                alpha_sum_mag['AF4'] = sum(af4_fft[8:15])
+                alpha_sum_mag['FC6'] = sum(fc6_fft[8:15])
+                alpha_sum_mag['F4'] = sum(f4_fft[8:15])
 
-                beta_sum_mag['F3'] = sum(f3_fft[5:7])
-                beta_sum_mag['FC5'] = sum(fc5_fft[5:7])
-                beta_sum_mag['AF3'] = sum(af3_fft[5:7])
-                beta_sum_mag['F7'] = sum(f7_fft[5:7])
-                beta_sum_mag['T7'] = sum(t7_fft[5:7])
-                beta_sum_mag['P7'] = sum(p7_fft[5:7])
-                beta_sum_mag['O1'] = sum(o1_fft[5:7])
-                beta_sum_mag['O2'] = sum(o2_fft[5:7])
-                beta_sum_mag['P8'] = sum(p8_fft[5:7])
-                beta_sum_mag['T8'] = sum(t8_fft[5:7])
-                beta_sum_mag['F8'] = sum(f8_fft[5:7])
-                beta_sum_mag['AF4'] = sum(af4_fft[5:7])
-                beta_sum_mag['FC6'] = sum(fc6_fft[5:7])
-                beta_sum_mag['F4'] = sum(f4_fft[5:7])
+                beta_sum_mag['F3'] = sum(f3_fft[16:31])
+                beta_sum_mag['FC5'] = sum(fc5_fft[16:31])
+                beta_sum_mag['AF3'] = sum(af3_fft[16:31])
+                beta_sum_mag['F7'] = sum(f7_fft[16:31])
+                beta_sum_mag['T7'] = sum(t7_fft[16:31])
+                beta_sum_mag['P7'] = sum(p7_fft[16:31])
+                beta_sum_mag['O1'] = sum(o1_fft[16:31])
+                beta_sum_mag['O2'] = sum(o2_fft[16:31])
+                beta_sum_mag['P8'] = sum(p8_fft[16:31])
+                beta_sum_mag['T8'] = sum(t8_fft[16:31])
+                beta_sum_mag['F8'] = sum(f8_fft[16:31])
+                beta_sum_mag['AF4'] = sum(af4_fft[16:31])
+                beta_sum_mag['FC6'] = sum(fc6_fft[16:31])
+                beta_sum_mag['F4'] = sum(f4_fft[16:31])
 
-                gamma_sum_mag['F3'] = sum(f3_fft[8:])
-                gamma_sum_mag['FC5'] = sum(fc5_fft[8:])
-                gamma_sum_mag['AF3'] = sum(af3_fft[8:])
-                gamma_sum_mag['F7'] = sum(f7_fft[8:])
-                gamma_sum_mag['T7'] = sum(t7_fft[8:])
-                gamma_sum_mag['P7'] = sum(p7_fft[8:])
-                gamma_sum_mag['O1'] = sum(o1_fft[8:])
-                gamma_sum_mag['O2'] = sum(o2_fft[8:])
-                gamma_sum_mag['P8'] = sum(p8_fft[8:])
-                gamma_sum_mag['T8'] = sum(t8_fft[8:])
-                gamma_sum_mag['F8'] = sum(f8_fft[8:])
-                gamma_sum_mag['AF4'] = sum(af4_fft[8:])
-                gamma_sum_mag['FC6'] = sum(fc6_fft[8:])
-                gamma_sum_mag['F4'] = sum(f4_fft[8:])
+                gamma_sum_mag['F3'] = sum(f3_fft[32:])
+                gamma_sum_mag['FC5'] = sum(fc5_fft[32:])
+                gamma_sum_mag['AF3'] = sum(af3_fft[32:])
+                gamma_sum_mag['F7'] = sum(f7_fft[32:])
+                gamma_sum_mag['T7'] = sum(t7_fft[32:])
+                gamma_sum_mag['P7'] = sum(p7_fft[32:])
+                gamma_sum_mag['O1'] = sum(o1_fft[32:])
+                gamma_sum_mag['O2'] = sum(o2_fft[32:])
+                gamma_sum_mag['P8'] = sum(p8_fft[32:])
+                gamma_sum_mag['T8'] = sum(t8_fft[32:])
+                gamma_sum_mag['F8'] = sum(f8_fft[32:])
+                gamma_sum_mag['AF4'] = sum(af4_fft[32:])
+                gamma_sum_mag['FC6'] = sum(fc6_fft[32:])
+                gamma_sum_mag['F4'] = sum(f4_fft[32:])
 
                 '''
                 print "Delta Magnitude Sum:"
