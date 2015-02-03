@@ -66,26 +66,6 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
                 }
         	}
         });
-
-        /*$("#sensor_table").on('click', 'td', function (event) {
-            var $td = $(event.target);
-            var sensorName = $td.text();
-
-            $td.toggleClass("selected-cell");
-            if ($td.hasClass('selected-cell')) {
-                var frequencyPowerTable = new FrequencyPowerTable(sensorName);
-                $('#tables-spot').append(frequencyPowerTable.toHtmlTable());
-                signalMap[sensorName] = frequencyPowerTable;
-
-                runStreamer();
-            } else {
-                removeTable(sensorName);
-                signalMap[sensorName] = undefined;
-                if (_(signalMap).values().compact().size() === 0) {
-                    streamer.stop();
-                }
-            }
-        });*/
     });
 
     function switchDebugMode ($btn) {
