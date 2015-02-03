@@ -10,7 +10,7 @@ import os
 import select
 import fft
 import signal_preprocessing as sp
-#import check_signal_quality
+import check_signal_quality
 
 server_testing_mode = 0
 if server_testing_mode:
@@ -105,8 +105,8 @@ def verify_user():
     global fc6_mean
     global f4_mean
     headset = emotiv.Emotiv()
-    # schedulerGevent = gevent.spawn(headset.setup)
-    # gevent.sleep(1)
+    gevent.spawn(headset.setup)
+    gevent.sleep(1)
     user_verify = False
     while not user_verify:
         user_name = raw_input("User id: ")
@@ -195,6 +195,9 @@ def verify_user():
 
                 if not user_verify:
                     print "Something is wrong with the environment offset average variables. Please use another user id."
+                else:
+                    print 'check signal quality'
+                    #check_signal_quality.run(headset)
 
             except IOError:
                 print "IO Error"
@@ -204,11 +207,6 @@ def verify_user():
                 pref_file.close()
         else:
             print "Invalid user id. Please use an alphanumeric id."
-
-def check_signal_quality():
-    #print "Please check the quality of signals. "
-    #check_signal_quality.run(headset)
-    pass
 
 def clear_buffers():
     del F3Buffer[:]
@@ -228,14 +226,18 @@ def clear_buffers():
 
 def find_mean():
     global user_preference
+    headset = emotiv.Emotiv()
+    gevent.spawn(headset.setup)
+    gevent.sleep(1)
     counter = 0
 
     raw_input("Need to Calculate signal average. Do NOT wear the headset. Please press enter to continue...")
     print("Calculating signal average. Please wait...")
 
     while counter < 1000:
+        print "..." + str((counter+1)/10) + "%"
         # Retrieve emotiv packet
-        headset = emotiv.Emotiv()
+        #headset = emotiv.Emotiv()
         packet = headset.dequeue()
 
         # Get sensor data

@@ -13,7 +13,8 @@ import gevent
 import sys
 
 #from emokit.emotiv import Emotiv
-from emotiv import Emotiv
+from ..lib import emotiv
+#from emotiv import Emotiv
 
 class Grapher(object):
     def __init__(self, screen, name, i):
