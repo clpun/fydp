@@ -27,6 +27,19 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
                 self._bufferLock = false;
                 $('body').trigger('bufferUpdated');
             });
+            this.socket.on('notification', function(resp) {
+                while (self._bufferLock);
+                self._bufferLock = true;
+                if (resp.data instanceof Array) {
+                    resp.data.forEach(function (val) {
+                        self.buffer.push(val);
+                    });
+                } else {
+                    self.buffer.push(resp.data);
+                }
+                self._bufferLock = false;
+                $('body').trigger('bufferUpdated');
+            });
             this.socket.on('disconnect', function() {
                 alert('socket disconnected');
                 self.connect();

@@ -5,15 +5,10 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             return null;
         }
         this.signalName = signalName;
-        this.deltaPower = null;
         this.deltaChart = null;
-        this.thetaPower = null;
         this.thetaChart = null;
-        this.alphaPower = null;
         this.alphaChart = null;
-        this.betaPower = null;
         this.betaChart = null;
-        this.gammaPower = null;
         this.gammaChart = null;
     }
 
@@ -27,16 +22,12 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             var tableContainer = $('<div class="col-md-10"><h3>' + this.signalName + '</h3></div>');
             var table = $('<table class="table table-bordered"/>');
             var row = $('<tr/>')
-                    //.append('<th>Frequency</th>')
-                    //.append('<th>Power</th>')
                     .append('<th>Power Graph</th>');
             table.append(row);
 
             var self = this;
             _(SignalNameEnum.signalTypes).mapValues(function(signalType) {
                 row = $('<tr/>')
-                    //.append('<td>' + signalType + '</td>')
-                    //.append('<td><div id="' + self.signalName + signalType + 'Power" align="center"></div></td>')
                     .append('<td width="1000px"><div>'+signalType+'&nbsp;&nbsp;(<label id="' + self.signalName + signalType + 'Power"></label>)</div><div class="row" style="margin: auto;"><canvas id="' + signalType + self.signalName + '" width="900" height="200"></canvas></div></td>');
                 self[signalType.toLowerCase() + 'Chart'] = createChart(row.find('canvas'));
                 table.append(row);
@@ -56,6 +47,13 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
             currentChart.addData([value], '');
             currentChart.signalCount += 1;
             $('#'+this.signalName+signalType+'Power').text(value);
+        },
+
+        flushAllCharts : function (signalType) {
+            // Not Implemented yet
+            // currentChart = this[signalType.toLowerCase() + 'Chart'];
+            // console.log(currentChart);
+            // console.log('Flushed chart = ' + signalType);
         }
     };
 

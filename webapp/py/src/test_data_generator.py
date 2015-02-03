@@ -1,4 +1,4 @@
-from random import randrange
+import random
 from gevent import sleep
 
 
@@ -16,7 +16,7 @@ class TestDataGenerator(object):
             for signal_type in self.signal_types:
                 dict_to_yield[signal_type] = {}
                 for sensor_name in self.sensor_names:
-                    dict_to_yield[signal_type][sensor_name] = randrange(1, 8000, 1)
+                    dict_to_yield[signal_type][sensor_name] = random.uniform(1.0, 8000.0)
             yield dict_to_yield
 
     def stop_generation(self):
