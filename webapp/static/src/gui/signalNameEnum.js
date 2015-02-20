@@ -28,6 +28,21 @@ define('SignalNameEnum', function () {
 
         verifySignal : function (signalName) {
             return this.left.hasOwnProperty(signalName) || this.right.hasOwnProperty(signalName);
+        },
+
+        getAllSignals : function () {
+            var names = [];
+            for (var name in this.left) {
+                if (this.hasOwnProperty('left')) {
+                    names.push(name);
+                }
+            }
+            for (var name in this.right) {
+                if (this.hasOwnProperty('right')) {
+                    names.push(name);
+                }
+            }
+            return names;
         }
     };
 });

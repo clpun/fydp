@@ -1,0 +1,72 @@
+#contact-qualities-spot {
+	position : relative;
+	top : -154px;
+	left : 500px;
+}
+
+#contact-quality-container {
+	position: relative;
+}
+
+#contact-quality-base-image {
+	background-image:url('../images/contact_quality.png');
+	position: absolute;
+	background-size: 200px 200px;
+	width : 200px;
+	height : 200px;
+	z-index : 1;
+}
+
+#contact-quality-container ._5 {
+	background-image:url('../images/circle_white.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}
+
+#contact-quality-container ._4 {
+	background-image:url('../images/circle_green.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}
+
+#contact-quality-container ._3 {
+	background-image:url('../images/circle_yellow.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}
+
+#contact-quality-container ._2 {
+	background-image:url('../images/circle_orange.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}
+
+#contact-quality-container ._1 {
+	background-image:url('../images/circle_red.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}
+
+#contact-quality-container ._0 {
+	background-image:url('../images/circle_black.png');
+	background-size: 22px 22px;
+	width : 22px;
+	height : 22px;
+	position: absolute;
+	z-index : 5;
+}

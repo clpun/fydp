@@ -41,12 +41,14 @@ define('FrequencyPowerTable', ['jquery', 'SignalNameEnum', 'Chart', 'lodash'], f
 
         handleIncomingSignalUpdate : function (signalType, value) {
             var currentChart = this[signalType.toLowerCase() + 'Chart'];
-            if (currentChart.signalCount > 30) {
-                currentChart.removeData();
-            };
-            currentChart.addData([value], '');
-            currentChart.signalCount += 1;
-            $('#'+this.signalName+signalType+'Power').text(value);
+            if (currentChart != undefined) {
+                if (currentChart.signalCount > 30) {
+                    currentChart.removeData();
+                };
+                currentChart.addData([value], '');
+                currentChart.signalCount += 1;
+                $('#'+this.signalName+signalType+'Power').text(value);
+            }
         },
 
         flushAllCharts : function (signalType) {

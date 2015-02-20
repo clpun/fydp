@@ -7,6 +7,7 @@ from py.src.test_data_generator import TestDataGenerator
 import thread
 from threading import Event
 import time
+import math
 
 app = Flask(__name__)
 sockets = SocketIO(app)
@@ -49,7 +50,7 @@ def headset_data_handler():
                 if not test_mode or stop_streaming_event.isSet():
                     break
                 if start_recording_event.isSet():
-                	print "recording... = " + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
+                	print "recording... = ("+ str(math.ceil(recordingDuration*samplingPeriod*100)/100) +")		" + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
                 	if recordingDuration >= duration:
                 		stop_recording()
                 	# data_point format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}
@@ -62,7 +63,7 @@ def headset_data_handler():
                 if test_mode or stop_streaming_event.isSet():
                     break
                 if start_recording_event.isSet():
-                	print "recording... = " + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
+                	print "recording... = ("+ str(math.ceil(recordingDuration*samplingPeriod*100)/100) +")		" + str((recordingDuration*100/duration) if (recordingDuration*100/duration) < 100 else 100) + "%"
                 	if recordingDuration >= duration:
                 		stop_recording()
                 	# data_point format: {"delta":{{"F3":123,"F4":123}},"theta":{},"alpha":{},"beta":{},"gamma":{}}

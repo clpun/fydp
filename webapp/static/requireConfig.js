@@ -10,7 +10,8 @@ requirejs.config({
         main : 'src/main',
         Streamer : 'src/streaming/streamer',
         SignalNameEnum : 'src/gui/signalNameEnum',
-        FrequencyPowerTable : 'src/gui/frequencyPowerTable'
+        FrequencyPowerTable : 'src/gui/frequencyPowerTable',
+        ContactQuality : 'src/gui/contactQuality'
     },
     shim : {
         "bootstrap" : {

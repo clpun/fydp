@@ -114,9 +114,7 @@ def verify_user():
     global af4_mean
     global fc6_mean
     global f4_mean
-    headset = emotiv.Emotiv()
-    gevent.spawn(headset.setup)
-    gevent.sleep(1)
+
     user_verify = False
     while not user_verify:
         user_name = raw_input("User id: ")
@@ -207,7 +205,7 @@ def verify_user():
                     print "Something is wrong with the environment offset average variables. Please use another user id."
                 else:
                     print 'check signal quality'
-                    check_signal_quality.run(headset)
+                    #check_signal_quality.run(headset)
 
             except IOError:
                 print "IO Error"

@@ -1,7 +1,9 @@
-require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash', 'bootstrap'], function ($, Streamer, FrequencyPowerTable, SignalNameEnum, _) {
+require(['jquery', 'Streamer', 'FrequencyPowerTable', 'ContactQuality', 'SignalNameEnum', 'lodash', 'bootstrap'], function ($, Streamer, FrequencyPowerTable, ContactQuality, SignalNameEnum, _) {
     var signalMap = {};
+    var allSignalNames = SignalNameEnum.getAllSignals();
     var streamerRunning = false;
     var streamer = new Streamer();
+    var contactQualityImage = new ContactQuality();
     var contMode = true;
     var startTimedMode = false;
     var flushingChart = false;
@@ -42,11 +44,26 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
         });
     }
 
+    function drawContactQualityImage () {
+    	$('#contact-qualities-spot').append(contactQualityImage.createBaseImage());
+    	console.log($('#contact-qualities-spot').position());
+    	$('#contact-quality-container').append(contactQualityImage.createContactQualityLabels());
+        for (var name in allSignalNames) {
+            var positionValues = contactQualityImage.getLabelPosition(allSignalNames[name]);
+            $('#' + contactQualityImage.getNameForChannel(allSignalNames[name])).css({top:String(positionValues[0])+'px',left:String(positionValues[1])+'px'});
+        }
+    }
+
+    function verifyUser() {
+        request('verify_user');
+    }
+
     $(document).ready(function () {
         if (window.navigator.platform && window.navigator.platform.indexOf('Mac') !== -1)
             switchDebugMode($('#debug-switch'));
 
-        request('verify_user');
+        drawContactQualityImage();
+        verifyUser();
         $("#debug-switch").on('click', switchDebugMode);
 		$('#cont-timed-switch').on('click', switchContMode);
 		$('#reset-btn').on('click', resetBtn);
@@ -177,6 +194,10 @@ require(['jquery', 'Streamer', 'FrequencyPowerTable', 'SignalNameEnum', 'lodash'
                     frequencyPowerTable.handleIncomingSignalUpdate(signalType, signals[signalType.toLowerCase()][sensorName]);
                 });
             }
+        });
+        var qualityValues = signals['quality'];
+        $.each(qualityValues, function( key, value ) {
+            contactQualityImage.handleIncomingSignalUpdate(key,value);
         });
     }
 });
