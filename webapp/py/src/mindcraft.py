@@ -398,26 +398,6 @@ def main():
         while True:
             # Retrieve emotiv packet
             packet = headset.dequeue()
-            # print str(packet)
-            #for key in packet.sensors.keys():
-            #    print str(key) + " = " + str(packet.sensors[key])
-            #print ""
-
-            # Get contact quality data
-            #F3_quality = packet.sensors['F3']['quality']
-            #FC5_quality = packet.sensors['FC5']['quality']
-            #AF3_quality = packet.sensors['AF3']['quality']
-            #F7_quality = packet.sensors['F7']['quality']
-            #T7_quality = packet.sensors['T7']['quality']
-            #P7_quality = packet.sensors['P7']['quality']
-            #O1_quality = packet.sensors['O1']['quality']
-            #O2_quality = packet.sensors['O2']['quality']
-            #P8_quality = packet.sensors['P8']['quality']
-            #T8_quality = packet.sensors['T8']['quality']
-            #F8_quality = packet.sensors['F8']['quality']
-            #AF4_quality = packet.sensors['AF4']['quality']
-            #FC6_quality = packet.sensors['FC6']['quality']
-            #F4_quality = packet.sensors['F4']['quality']
 
             # Get sensor data
             #F3 = packet.sensors['F3']['value']
@@ -449,14 +429,6 @@ def main():
             AF4 = packet.sensors['AF4']
             FC6 = packet.sensors['FC6']
             F4 = packet.sensors['F4']
-
-            #print "F3 = " + str(F3)
-            #print "FC5 = " + str(FC5)
-            #print "AF3 = " + str(AF3)
-            #print "F7 = " + str(F7)
-            #print "F8 = " + str(F8)
-            #print "F4 = " + str(F4)
-            #print ""
 
             # Build buffers for FFT
             F3Buffer.append(F3['value'])
