@@ -36,9 +36,6 @@ class UserPreference:
 
 user_preference = UserPreference()
 
-# Control Variables
-start_recording = True
-
 # Variables for the sum magnitude of the 5 frequency bands. 
 delta_sum_mag = {}
 theta_sum_mag = {}
@@ -48,6 +45,15 @@ gamma_sum_mag = {}
 
 band_types = ['delta', 'theta', 'alpha', 'beta', 'gamma']
 sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+
+gyroX = 0.0
+gyroY = 0.0
+battery = 0.0
+contact_quality = {}
+
+# Variables to calculate first derivative
+_gyroX = 0.0
+_gyroY = 0.0
 
 # Variables for determining if a frequency band has steady increase in F3 
 f3_delta_prev_mag = 0
@@ -199,7 +205,7 @@ def verify_user():
                     print "Something is wrong with the environment offset average variables. Please use another user id."
                 else:
                     print 'check signal quality'
-                    #check_signal_quality.run(headset)
+                    check_signal_quality.run(headset)
 
             except IOError:
                 print "IO Error"
@@ -344,6 +350,8 @@ def analyze_pattern():
     global o2_theta_count
     global o2_delta_count
     global o2_gamma_count
+    global _gyroX
+    global _gyroY
 
     if(gamma_sum_mag['O1'] > o1_gamma_prev_mag):
         #print "O1 gamma increase; mag = {0}".format(gamma_sum_mag['O1'])
@@ -367,10 +375,20 @@ def analyze_pattern():
 
     o1_gamma_prev_mag = gamma_sum_mag['O1']
     o2_gamma_prev_mag = gamma_sum_mag['O2']
+    # print "Battery = " + str(battery)
+    if float(battery) < 5:
+        print "Need to recharge battery: " + str(battery)
+    print "Change of gyroX = " + str(_gyroX - gyroX)
+    print "Change of gyroY = " + str(_gyroY - gyroY)
+    _gyroX = gyroX
+    _gyroY = gyroY
     #print "--------------------"
 
 def main():
     global headset
+    global gyroX
+    global gyroY
+    global battery
     headset = emotiv.Emotiv()
     gevent.spawn(headset.setup)
     gevent.sleep(1)
@@ -383,7 +401,13 @@ def main():
             # Retrieve emotiv packet
             packet = headset.dequeue()
             # print str(packet)
+            # print str(type(packet))
+            # for key in packet.sensors.keys():
+            #     print str(key) + " = " + str(packet.sensors[key])
             # Get sensor data
+            battery = packet.battery
+            gyroX = packet.sensors['X']['value']
+            gyroY = packet.sensors['Y']['value']
             F3 = packet.sensors['F3']['value']
             FC5 = packet.sensors['FC5']['value']
             AF3 = packet.sensors['AF3']['value']
