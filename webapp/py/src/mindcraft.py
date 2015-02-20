@@ -37,6 +37,7 @@ class UserPreference:
 user_preference = UserPreference()
 
 # Variables for the sum magnitude of the 5 frequency bands. 
+
 delta_sum_mag = {}
 theta_sum_mag = {}
 alpha_sum_mag = {}
@@ -56,6 +57,7 @@ _gyroX = 0.0
 _gyroY = 0.0
 
 # Variables for determining if a frequency band has steady increase in F3 
+
 f3_delta_prev_mag = 0
 f3_delta_count = 0
 o1_alpha_prev_mag = 0
@@ -370,7 +372,7 @@ def analyze_pattern():
     if o2_gamma_count >= 3:
         #print "**O2 gamma increase; mag = {0}, ({1})".format(gamma_sum_mag['O2'],gamma_sum_mag['O2'] - o2_gamma_prev_mag)
         pass
-    
+
     #print "O1 gamma: mag = {0}, ({1})\nO2 gamma: mag = {2}, ({3})".format(int(gamma_sum_mag['O1']),int(gamma_sum_mag['O1'] - o1_gamma_prev_mag),int(gamma_sum_mag['O2']),int(gamma_sum_mag['O2'] - o2_gamma_prev_mag))
 
     o1_gamma_prev_mag = gamma_sum_mag['O1']
@@ -389,6 +391,22 @@ def main():
     global gyroX
     global gyroY
     global battery
+
+    F3 = {}
+    FC5 = {}
+    AF3 = {}
+    F7 = {}
+    T7 = {}
+    P7 = {}
+    O1 = {}
+    O2 = {}
+    P8 = {}
+    T8 = {}
+    F8 = {}
+    AF4 = {}
+    FC6 = {}
+    F4 = {}
+
     headset = emotiv.Emotiv()
     gevent.spawn(headset.setup)
     gevent.sleep(1)
@@ -400,44 +418,56 @@ def main():
         while True:
             # Retrieve emotiv packet
             packet = headset.dequeue()
-            # print str(packet)
-            # print str(type(packet))
-            # for key in packet.sensors.keys():
-            #     print str(key) + " = " + str(packet.sensors[key])
-            # Get sensor data
+
             battery = packet.battery
             gyroX = packet.sensors['X']['value']
             gyroY = packet.sensors['Y']['value']
-            F3 = packet.sensors['F3']['value']
-            FC5 = packet.sensors['FC5']['value']
-            AF3 = packet.sensors['AF3']['value']
-            F7 = packet.sensors['F7']['value']
-            T7 = packet.sensors['T7']['value']
-            P7 = packet.sensors['P7']['value']
-            O1 = packet.sensors['O1']['value']
-            O2 = packet.sensors['O2']['value']
-            P8 = packet.sensors['P8']['value']
-            T8 = packet.sensors['T8']['value']
-            F8 = packet.sensors['F8']['value']
-            AF4 = packet.sensors['AF4']['value']
-            FC6 = packet.sensors['FC6']['value']
-            F4 = packet.sensors['F4']['value']
+            # Get sensor data
+            #F3 = packet.sensors['F3']['value']
+            #FC5 = packet.sensors['FC5']['value']
+            #AF3 = packet.sensors['AF3']['value']
+            #F7 = packet.sensors['F7']['value']
+            #T7 = packet.sensors['T7']['value']
+            #P7 = packet.sensors['P7']['value']
+            #O1 = packet.sensors['O1']['value']
+            #O2 = packet.sensors['O2']['value']
+            #P8 = packet.sensors['P8']['value']
+            #T8 = packet.sensors['T8']['value']
+            #F8 = packet.sensors['F8']['value']
+            #AF4 = packet.sensors['AF4']['value']
+            #FC6 = packet.sensors['FC6']['value']
+            #F4 = packet.sensors['F4']['value']
+
+            F3 = packet.sensors['F3']
+            FC5 = packet.sensors['FC5']
+            AF3 = packet.sensors['AF3']
+            F7 = packet.sensors['F7']
+            T7 = packet.sensors['T7']
+            P7 = packet.sensors['P7']
+            O1 = packet.sensors['O1']
+            O2 = packet.sensors['O2']
+            P8 = packet.sensors['P8']
+            T8 = packet.sensors['T8']
+            F8 = packet.sensors['F8']
+            AF4 = packet.sensors['AF4']
+            FC6 = packet.sensors['FC6']
+            F4 = packet.sensors['F4']
 
             # Build buffers for FFT
-            F3Buffer.append(F3)
-            FC5Buffer.append(FC5)
-            AF3Buffer.append(AF3)
-            F7Buffer.append(F7)
-            T7Buffer.append(T7)
-            P7Buffer.append(P7)
-            O1Buffer.append(O1)
-            O2Buffer.append(O2)
-            P8Buffer.append(P8)
-            T8Buffer.append(T8)
-            F8Buffer.append(F8)
-            AF4Buffer.append(AF4)
-            FC6Buffer.append(FC6)
-            F4Buffer.append(F4)
+            F3Buffer.append(F3['value'])
+            FC5Buffer.append(FC5['value'])
+            AF3Buffer.append(AF3['value'])
+            F7Buffer.append(F7['value'])
+            T7Buffer.append(T7['value'])
+            P7Buffer.append(P7['value'])
+            O1Buffer.append(O1['value'])
+            O2Buffer.append(O2['value'])
+            P8Buffer.append(P8['value'])
+            T8Buffer.append(T8['value'])
+            F8Buffer.append(F8['value'])
+            AF4Buffer.append(AF4['value'])
+            FC6Buffer.append(FC6['value'])
+            F4Buffer.append(F4['value'])
 
             sample_counter = sample_counter + 1
 
@@ -613,9 +643,25 @@ def main():
                         elif band == "gamma":
                             power_dict[band][sensor] = gamma_sum_mag[sensor]
 
+                power_dict['quality'] = {}
+                power_dict['quality']['F3'] = F3['quality']
+                power_dict['quality']['FC5'] = FC5['quality']
+                power_dict['quality']['AF3'] = AF3['quality']
+                power_dict['quality']['F7'] = F7['quality']
+                power_dict['quality']['T7'] = T7['quality']
+                power_dict['quality']['P7'] = P7['quality']
+                power_dict['quality']['O1'] = O1['quality']
+                power_dict['quality']['O2'] = O2['quality']
+                power_dict['quality']['P8'] = P8['quality']
+                power_dict['quality']['T8'] = T8['quality']
+                power_dict['quality']['F8'] = F8['quality']
+                power_dict['quality']['AF4'] = AF4['quality']
+                power_dict['quality']['FC6'] = FC6['quality']
+                power_dict['quality']['F4'] = F4['quality']
+
                 print "printing time for every emit = "+str(time.time())
                 yield power_dict
-                
+
                 # Clear buffers
                 clear_buffers()
                 sample_counter = 0
