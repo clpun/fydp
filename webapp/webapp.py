@@ -1,3 +1,5 @@
+import json
+import os
 from flask import Flask, render_template
 from flask import jsonify
 from flask import request, g
@@ -95,6 +97,15 @@ def web_soc_fun():
 @app.route('/image_bank', methods=['GET'])
 def image_bank():
     return render_template('image_bank.html')
+
+@app.route('/image_bank_contents', methods=['GET'])
+def image_bank_contents():
+    contents = []
+    for dirpath, dirnames, filenames in os.walk('static/images/image_bank'):
+        for filename in filenames:
+            contents.append(filename)
+    return json.dumps({"files": contents})
+
 
 @app.route('/verify_user')
 def verify_user():
