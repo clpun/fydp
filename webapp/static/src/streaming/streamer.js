@@ -6,7 +6,6 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
         connected : false,
         socket : null,
         buffer : [],
-        _bufferLock : false,
         connectedCallback : undefined,
 
         connect : function () {
@@ -15,8 +14,6 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
             this.connecting = true;
             self.connected = true;
             this.socket.on('response', function(resp) {
-                while (self._bufferLock);
-                self._bufferLock = true;
                 if (resp.data instanceof Array) {
                     resp.data.forEach(function (val) {
                         self.buffer.push(val);
@@ -24,7 +21,6 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
                 } else {
                     self.buffer.push(resp.data);
                 }
-                self._bufferLock = false;
                 $('body').trigger('bufferUpdated');
             });
             this.socket.on('notification', function(resp) {
@@ -41,10 +37,8 @@ define('Streamer', ['jquery', 'socketio'], function ($, io) {
                 $('body').trigger('bufferUpdated');
             });
             this.socket.on('disconnect', function() {
-                alert('socket disconnected');
-                self.connect();
+                console.log('socket disconnected');
             });
-            //console.log('connected from streamer = ' + self.connected);
         },
 
         request : function (eventName, req) {
