@@ -11,7 +11,8 @@ requirejs.config({
         Streamer : 'src/streaming/streamer',
         SignalNameEnum : 'src/gui/signalNameEnum',
         FrequencyPowerTable : 'src/gui/frequencyPowerTable',
-        ContactQuality : 'src/gui/contactQuality'
+        ContactQuality : 'src/gui/contactQuality',
+        imageBank : 'src/imageBank'
     },
     shim : {
         "bootstrap" : {
@@ -27,6 +28,7 @@ requirejs.config({
 var pathname = window.location.pathname;
 if (pathname.indexOf('/webSoc') !== -1)
     requirejs(['webSocket']);
-else {
+else if (pathname.indexOf('/image_bank') !== -1)
+    requirejs(['imageBank']);
+else
     requirejs(['main']);
-}
