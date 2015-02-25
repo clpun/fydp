@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from flask import jsonify
 from flask import request, g
 from flask.ext.socketio import SocketIO, emit
-from py.src import mindcraft
+# from py.src import mindcraft
 from py.src.test_data_generator import TestDataGenerator
 import thread
 from threading import Event
@@ -17,7 +17,7 @@ test_data_generator = TestDataGenerator()
 channels = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
 bands = ['gamma', 'beta', 'alpha', 'theta', 'delta']
 
-samplingPeriod = mindcraft.fftSamplingNum / 128.0
+# samplingPeriod = mindcraft.fftSamplingNum / 128.0
 duration = 30.0
 recordingDuration = 0.0
 stop_streaming_event = Event()
@@ -94,7 +94,7 @@ def web_soc_fun():
 
 @app.route('/image_bank', methods=['GET'])
 def image_bank():
-    return render_template('image_bank')
+    return render_template('image_bank.html')
 
 @app.route('/verify_user')
 def verify_user():
