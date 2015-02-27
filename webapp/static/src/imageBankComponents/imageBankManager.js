@@ -33,6 +33,7 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
                             backgroundSize : "100vw 100vh",
                             backgroundImage : IMG_PATH + filename
                         });
+                        $('body').append($imageDiv.hide());
                         self.image$divs.push($imageDiv);
                     });
                     self.imageFileNames = data.files;
