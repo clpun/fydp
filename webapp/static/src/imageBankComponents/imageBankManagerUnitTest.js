@@ -15,7 +15,7 @@ define('ImageBankManagerUnitTest', ['ImageBankManager', 'jquery', 'lodash'], fun
         }
 
         // can replace half of the images for retrieval
-        imageBankManager.generateImagesForRetrieving();
+        imageBankManager.generateImagesForRetrieval();
         var imagesForRetrieving = imageBankManager.getImagesForList(ImageBankManager.RETRIEVAL);
         console.assert(imagesForEncoding.length === imagesForRetrieving.length, 'Wrong number of images were generated for retrieval');
         console.assert(_.uniq(imagesForRetrieving).length === 10, 'There were duplicate values in imagesForRetrieving');

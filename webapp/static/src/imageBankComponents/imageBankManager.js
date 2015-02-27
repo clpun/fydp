@@ -10,8 +10,9 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
         this.imagesLoaded = false;
         this.encodingImagesGenerated = false;
         this.imageIndicesForEncoding = []; // indices in image$div instance variable
-        this.encodingStepFinished = false;
+        this.currentIndexForEncoding = 0;
         this.imageIndicesForRetrieval = []; // indices in image$div instance variable
+        this.currentIndexForRetrieval = 0;
         this.retrievalImagesGenerated = false;
         this.numberOfImagesInSlideShow = 0;
         this.numberOfImagesLoaded = 0;
@@ -23,7 +24,7 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
             return Q($.get('/image_bank_contents', function (data, status) {
                 if (status === 'success') {
                     data.files.forEach(function (filename, index) {
-                        var $imageDiv = $('<div/>').css({
+                        var $imageDiv = $('<div class="slideshow-image"/>').css({
                             position : "fixed",
                             top : 0,
                             bottom : 0,
@@ -31,8 +32,8 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
                             right : 0,
                             zIndex : 1031,
                             backgroundSize : "100vw 100vh",
-                            backgroundImage : IMG_PATH + filename
-                        });
+                            backgroundImage : 'url("' + IMG_PATH + filename + '")'
+                        }).attr('tabindex', -1);
                         $('body').append($imageDiv.hide());
                         self.image$divs.push($imageDiv);
                     });
@@ -44,7 +45,7 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
             }, 'json'));
         },
 
-        getImageFileNames : function() {
+        getImageFileNames : function () {
             if (!this.imagesLoaded) {
                 console.error('Must first load images, call loadImages()');
                 return;
@@ -63,7 +64,7 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
             }
 
             for (var i = 0; i < this.numberOfImagesInSlideShow;) {
-                var imgIndex = parseInt(Math.random()*100)%this.numberOfImagesLoaded;
+                var imgIndex = parseInt(Math.random() * 100) % this.numberOfImagesLoaded;
                 var self = this;
                 if (!_(this.imageIndicesForEncoding).contains(imgIndex)) {
                     self.imageIndicesForEncoding.push(imgIndex);
@@ -73,7 +74,7 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
             this.encodingImagesGenerated = true;
         },
 
-        getImagesForList : function(type) {
+        getImagesForList : function (type) {
             if (!this.encodingImagesGenerated || (type === RETRIEVAL && !this.retrievalImagesGenerated)) {
                 console.error('Need to perform encoding step first');
                 return;
@@ -92,26 +93,28 @@ define('ImageBankManager', ['jquery', 'lodash', 'Q'], function ($, _, Q) {
             return imagesList;
         },
 
-        popNextImage$Div : function(type) {
+        popNextImage$Div : function (type) {
             var nextIndex;
             if (type === RETRIEVAL) {
-                if (!this.encodingImagesGenerated || !this.encodingStepFinished) {
+                if (!this.encodingImagesGenerated) {
                     console.error('Need to perform encoding step first');
                     return;
                 }
-                nextIndex = this.imageIndicesForRetrieval.shift();
+                nextIndex = this.imageIndicesForRetrieval[this.currentIndexForRetrieval];
+                this.currentIndexForRetrieval++;
             } else {
-                nextIndex = this.imageIndicesForEncoding.shift();
+                nextIndex = this.imageIndicesForEncoding[this.currentIndexForEncoding];
+                this.currentIndexForEncoding++;
             }
             return this.image$divs[nextIndex];
         },
 
-        generateImagesForRetrieving : function() {
+        generateImagesForRetrieval : function () {
             if (!this.encodingImagesGenerated) {
                 console.error('Need to generate images for encoding  first');
                 return;
             }
-            var numToReplace = this.numberOfImagesInSlideShow/2;
+            var numToReplace = this.numberOfImagesInSlideShow / 2;
             var replacedIndicesFromEncodingImages = [];
             this.imageIndicesForRetrieval = this.imageIndicesForEncoding.slice();
             var self = this;
