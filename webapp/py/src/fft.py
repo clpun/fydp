@@ -24,7 +24,7 @@ def write_to_file(data_set, start_time):
 	f = open('fft_mag_spectrum_formatted.csv', 'a')
         writer = csv.writer(f)
         data = [str(cur_time)]
-        
+
         for i in range(0, len(F3)):
             data.append(str(F3[i]))
         for i in range(0, len(FC5)):
@@ -65,7 +65,8 @@ def compute_fft(data):
 	#print "Frequencies: "+str(freq)
 
 	# Comput fft amplitude spectrum
-	y = np.fft.fft(data, 128)
+        normalization_factor = 2/128.0
+	y = np.fft.fft(data, 128)*normalization_factor
 	length_y = 128
 
 	# Return the positive frequency components
