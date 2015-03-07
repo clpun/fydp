@@ -65,7 +65,7 @@ def compute_fft(data):
 	#print "Frequencies: "+str(freq)
 
 	# Comput fft amplitude spectrum
-        normalization_factor = 2/128.0
+        normalization_factor = 2/np.sqrt(26.0)
 	y = np.fft.fft(data, 128)*normalization_factor
 	length_y = 128
 

@@ -5,14 +5,16 @@ from scipy import signal
 
 # # Generate sample data
 np.random.seed(0)
-n_samples = 2000
-time = np.linspace(0, 2*np.pi, n_samples)
+n_samples = 804
+(time, step) = np.linspace(0, 2*np.pi, n_samples, retstep=True)
+print step
 
-s1 = np.sin(2 * time)  # Signal 1 : sinusoidal signal
+s1 = np.sin(time)  # Signal 1 : sinusoidal signal
 # s2 = np.sign(np.sin(3 * time))  # Signal 2 : square signal
 # s3 = signal.sawtooth(2 * np.pi * time)  # Signal 3: saw tooth signal
 
-f1 = (np.fft.fft(s1,128).real[0:((128/2)+1)])
+normalization_factor = 2/np.sqrt(26.0)
+f1 = np.absolute((np.fft.fft(s1[778:],128)*normalization_factor)[0:((128/2)+1)])
 print f1
 
 plt.figure()
