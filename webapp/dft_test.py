@@ -8,13 +8,19 @@ np.random.seed(0)
 n_samples = 804
 (time, step) = np.linspace(0, 2*np.pi, n_samples, retstep=True)
 print step
+(time, step) = np.linspace(0, 2*np.pi, 26, retstep=True)
 
-s1 = np.sin(time)  # Signal 1 : sinusoidal signal
+s1 = 2*np.sin(time)  # Signal 1 : sinusoidal signal
 # s2 = np.sign(np.sin(3 * time))  # Signal 2 : square signal
 # s3 = signal.sawtooth(2 * np.pi * time)  # Signal 3: saw tooth signal
+print ( np.zeros((128-len(s1))))
+#s1 = np.concatenate((s1,s1))
+s1 = np.concatenate((s1,np.zeros(128-len(s1))))
+print len(s1)
 
-normalization_factor = 2/np.sqrt(26.0)
-f1 = np.absolute((np.fft.fft(s1[778:],128)*normalization_factor)[0:((128/2)+1)])
+normalization_factor = 2/26.0
+#f1 = np.absolute((np.fft.fft(s1[778:],128)*normalization_factor)[0:((128/2)+1)])
+f1 = np.absolute((np.fft.fft(s1)*normalization_factor)[0:((128/2)+1)])
 print f1
 
 plt.figure()
