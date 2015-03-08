@@ -4,7 +4,7 @@ from flask import Flask, render_template
 from flask import jsonify
 from flask import request, g
 from flask.ext.socketio import SocketIO, emit
-# from py.src import mindcraft
+from py.src import mindcraft
 from py.src.test_data_generator import TestDataGenerator
 import thread
 from threading import Event
@@ -19,7 +19,7 @@ test_data_generator = TestDataGenerator()
 channels = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
 bands = ['gamma', 'beta', 'alpha', 'theta', 'delta']
 
-# samplingPeriod = mindcraft.fftSamplingNum / 128.0
+samplingPeriod = mindcraft.fftSamplingNum / 128.0
 duration = 30.0
 recordingDuration = 0.0
 stop_streaming_event = Event()
@@ -66,7 +66,7 @@ def headset_data_handler():
                     recordingDuration += 1
                 sockets.emit('response', {'data': data_point}, namespace='/api')
         else:
-            for data_point in mindcraft.main():
+            for data_point in mindcraft.get_individual_frequency_power():
                 if test_mode or stop_streaming_event.isSet():
                     break
                 if start_recording_event.isSet():
@@ -164,13 +164,32 @@ def write_to_csv():
             for channel in channels:
                 csv_data += str(csvDataBuffer[index][band][channel]) + ","
         csv_data += "\n"
-
+    
     fo = open("test_data/time_frequency_plot_" + time.strftime("%d%b%Y_%H%M%S", time.localtime()) + ".csv", "wb")
     fo.write(csv_data)
+    fo.close()
+    ind_comp_data = write_ind_comp()
+    fo = open("test_data/independent_time_frequency_plot_" + time.strftime("%d%b%Y_%H%M%S", time.localtime()) + ".csv", "wb")
+    fo.write(ind_comp_data)
     fo.close()
     clear_recording_buffer()
     return jsonify(writing_succeeded=True)
 
+def write_ind_comp():
+	global csvDataBuffer
+	#print str(csvDataBuffer[0]['indiv_component'])
+	csv_data = "time,"
+	for channel in channels:
+		for ii in range(0,len(csvDataBuffer[0]['indiv_component'][channel])-1):
+			csv_data += channel + "(" + str(ii) + " Hz),"
+	csv_data += "\n"
+	for index in csvDataBuffer.keys():
+		csv_data += str(int(index)*samplingPeriod) + ","
+		for channel in channels:
+			for ii in range(0,len(csvDataBuffer[index]['indiv_component'][channel])-1):
+				csv_data += str(csvDataBuffer[index]['indiv_component'][channel][str(ii)]) + ","
+		csv_data += "\n"
+	return csv_data
 
 @app.route('/clear_recording_buffer')
 def clear_recording_buffer():

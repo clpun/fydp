@@ -1,4 +1,5 @@
 import numpy as np
+import mindcraft
 import csv
 import time
 
@@ -60,14 +61,13 @@ def write_to_file(data_set, start_time):
 
 def compute_fft(data):
 	#Check frequencies
-	timestep = 1/128.0
-	freq = np.fft.fftfreq(128, d=timestep)
+	timestep = 1/mindcraft.samplingFreq
+	freq = np.fft.fftfreq(int(mindcraft.samplingFreq), d=timestep)
 	#print "Frequencies: "+str(freq)
 
 	# Comput fft amplitude spectrum
-        normalization_factor = 2/np.sqrt(26.0)
-	y = np.fft.fft(data, 128)*normalization_factor
-	length_y = 128
+	normalization_factor = 2/(mindcraft.fftSamplingNum)
+	y = np.fft.fft(data, int(mindcraft.samplingFreq))*normalization_factor
 
 	# Return the positive frequency components
-	return np.absolute(y[0:(length_y/2)+1])
+	return np.absolute(y[0:(int(mindcraft.samplingFreq)/2)+1])

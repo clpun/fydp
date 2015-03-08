@@ -5,22 +5,20 @@ from scipy import signal
 
 # # Generate sample data
 np.random.seed(0)
-n_samples = 804
+n_samples_in_1_sec = 128
+n_samples = 26
+time_mag = 70.0
 (time, step) = np.linspace(0, 2*np.pi, n_samples, retstep=True)
-print step
-(time, step) = np.linspace(0, 2*np.pi, 26, retstep=True)
 
-s1 = 2*np.sin(time)  # Signal 1 : sinusoidal signal
-# s2 = np.sign(np.sin(3 * time))  # Signal 2 : square signal
+s1 = time_mag*np.sin(11*time)  # Signal 1 : sinusoidal signal
+s2 = 10*np.sign(np.sin(7*time))  # Signal 2 : square signal
 # s3 = signal.sawtooth(2 * np.pi * time)  # Signal 3: saw tooth signal
-print ( np.zeros((128-len(s1))))
-#s1 = np.concatenate((s1,s1))
-s1 = np.concatenate((s1,np.zeros(128-len(s1))))
-print len(s1)
+s1 = np.concatenate((s1,np.zeros(n_samples_in_1_sec-len(s1))))
+s2 = np.concatenate((s2,np.zeros(n_samples_in_1_sec-len(s2))))
 
-normalization_factor = 2/26.0
-#f1 = np.absolute((np.fft.fft(s1[778:],128)*normalization_factor)[0:((128/2)+1)])
-f1 = np.absolute((np.fft.fft(s1)*normalization_factor)[0:((128/2)+1)])
+normalization_factor = 2/(26.0)
+f1 = np.absolute((np.fft.fft(s1)*normalization_factor)[0:((n_samples_in_1_sec/2)+1)])
+f2 = np.absolute((np.fft.fft(s2)*normalization_factor)[0:((n_samples_in_1_sec/2)+1)])
 print f1
 
 plt.figure()
@@ -33,9 +31,11 @@ colors = ['red', 'steelblue']
 plt.subplot(2, 1, 1)
 plt.title('True Sources')
 plt.plot(s1, color='red')
+plt.plot(s2, color='steelblue')
 plt.subplot(2, 1, 2)
 plt.title('DFT')
-plt.plot(np.linspace(0,64,65),f1, color='steelblue')
+plt.plot(np.linspace(0,64,65),f1, color='red')
+plt.plot(np.linspace(0,64,65),f2, color='steelblue')
 # for ii, (model, name) in enumerate(zip(models, names), 1):
 #     plt.subplot(4, 1, ii)
 #     plt.title(name)
