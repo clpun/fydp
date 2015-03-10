@@ -103,18 +103,26 @@ else
                     'P8','T8','FC6','F4','F8','AF4'},...
                     'Callback',@channel_popupmenu_Callback,...
                     'Tag','channel_menu',...
-                    'Value',1,'Position',[130 20 130 20]);
+                    'Value',1,'Position',[100 20 130 20]);
     pm2h = uicontrol('Parent',ph,'Style','popupmenu',...
                     'String',{'delta','theta','alpha','beta','gamma'},...
                     'Callback',@band_popupmenu_Callback,...
                     'Tag','band_menu',...
-                    'Value',1,'Position',[300 20 130 20]);
+                    'Value',1,'Position',[250 20 130 20]);
     pb1h = uicontrol('Parent',ph,'Style','pushbutton','String','Add',...
                     'Callback',@add_button_Callback,...
-                    'Position',[500 10 60 40]);
+                    'Position',[400 10 60 40]);
     pb2h = uicontrol('Parent',ph,'Style','pushbutton','String','Clear',...
                     'Callback',@clear_button_Callback,...
-                    'Position',[590 10 60 40]);
+                    'Position',[490 10 60 40]);
+    pb3h = uicontrol('Parent',ph,'Style','pushbutton',...
+                    'String','Moving Average',...
+                    'Callback',@ma_button_Callback,...
+                    'Position',[580 10 100 40]);
+    grid on;
+    hold on;
+    xlabel('time(s)');
+    ylabel('magnitude');
 end
             
 % --- Executes on button press in add_button.
@@ -129,26 +137,19 @@ band_array = get(myhandles.band_menu, 'String');
 band_index = get(myhandles.band_menu, 'Value');
 band = band_array{band_index};
 variable = strcat(channel,'_',band,'_');
-grid on;
-hold on;
 if isfield(mydata,'legend')
     if isempty(strfind(mydata.legend,strcat(channel,'(',band,')')))
-        plot(T.time, T{:, {variable}}, 'Color', rand([1,3]))
+        plot(T.time, T{:, {variable}}, 'Color', rand([1,3]));
         mydata.legend = strcat(mydata.legend,',',channel,'(',band,')');
+        %mydata.legend = strcat(mydata.legend,',',channel,'-',band);
         legend(strsplit(mydata.legend,','));
     end
 else
-    plot(T.time, T{:, {variable}}, 'Color', rand([1,3]))
+    plot(T.time, T{:, {variable}}, 'Color', rand([1,3]));
     mydata.legend = strcat(channel,'(',band,')');
+    %mydata.legend = strcat(channel,'-',band);
     legend(strsplit(mydata.legend,','));
 end
-
-% if isfield(mydata,'legend')
-%     tmp = mydata.legend;
-%     mydata.legend = strcat(tmp,',',channel,'(',band,')');
-% else
-%     mydata.legend = strcat(channel,'(',band,')');
-% end
 guidata(hObject, mydata);
 
 
@@ -158,8 +159,44 @@ cla(myhandles.axes);
 legend('off');
 mydata = guidata(hObject);
 mydata = rmfield(mydata,'legend');
-%mydata.legend = '';
 guidata(hObject, mydata);
+
+function ma_button_Callback(hObject, eventdata, handles)
+global T;
+myhandles = guihandles(hObject);
+mydata = guidata(hObject);
+%cla(myhandles.axes);
+strlegend = ''
+for entry = strsplit(mydata.legend,',')
+    data = strsplit(strjoin(entry),'(');
+    channel = strjoin(data(1));
+    band = strjoin(data(2));
+    variable = strcat(channel,'_',band(1:end-1),'_');
+    if isempty(strlegend)
+        strlegend = strcat(channel,'(',band(1:end-1),')',' MA window=20');
+    else
+        strlegend = strcat(strlegend,',',channel,'(',band(1:end-1),')',' MA window=20');
+    end
+    ma = moving_average(T{:, {variable}},20);
+	plot(T.time, ma, 'Color', rand([1,3]));
+%     for i=1:2
+%         w=10*i;
+%         ma = moving_average(T{:, {variable}},w);
+%         plot(T.time, ma, 'Color', rand([1,3]));
+%         %legend = strcat(legend,',',legend,' window=');
+%     end
+%     legend('','','','','','');
+end
+orig_legend = strsplit(mydata.legend,',')
+strlegend = strsplit(strlegend,',')
+new_legend = [orig_legend,strlegend];
+legend([orig_legend,strlegend]);
+
+
+function ma = moving_average(y,window)
+%window = 5;
+mask = ones(1,window)/window;
+ma = conv(y,mask,'same');
 
 
 function channel_popupmenu_Callback(hObject, eventdata, handles)
