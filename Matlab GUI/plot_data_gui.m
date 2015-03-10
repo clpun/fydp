@@ -153,12 +153,19 @@ else
     pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
                     'String',{'AF3','F7','F3','FC5','T7','P7','O1','O2',...
                     'P8','T8','FC6','F4','F8','AF4'},...
-                    'Callback',@tf_channel_popupmenu_Callback,...
                     'Tag','tf_channel_menu',...
                     'Value',1,'Position',[100 20 130 20]);
     pb1h = uicontrol('Parent',ph,'Style','pushbutton','String','Add',...
                     'Callback',@tf_add_button_Callback,...
-                    'Position',[400 10 60 40]);
+                    'Position',[300 10 60 40]);
+    c1h = uicontrol('Parent',ph,'Style','checkbox',...
+                'String','2D','Tag','tf_2d_cbox',...
+                'Callback',@tf_2d_cbox_Callback,...
+                'Value',0,'Position',[430 20 130 20]);
+    c2h = uicontrol('Parent',ph,'Style','checkbox',...
+                'String','Grayscale','Tag','tf_gray_cbox',...
+                'Callback',@tf_gray_cbox_Callback,...
+                'Value',0,'Position',[500 20 130 20]);
 end
 
 % ----------------------
@@ -257,6 +264,8 @@ mydata = guidata(hObject);
 channel_array = get(myhandles.tf_channel_menu, 'String');
 channel_index = get(myhandles.tf_channel_menu, 'Value');
 channel = channel_array{channel_index};
+dim_2 = get(myhandles.tf_2d_cbox, 'Value');
+grayscale = get(myhandles.tf_gray_cbox, 'Value');
 %create cell array of channel
 column = {};
 for i = 1:63
@@ -277,5 +286,29 @@ xlabel('time(s)');
 ylabel('freq(Hz)');
 zlabel('mag');
 %TODO: check box for 2D or 3D
+if dim_2 == 1
+	view(2);
+end
+if grayscale == 1
+	colormap(gray); 
+end
 
-function tf_channel_popupmenu_Callback(hObject, eventdata, handles)
+function tf_2d_cbox_Callback(hObject, eventdata, handles)
+myhandles = guihandles(hObject);
+dim_2 = get(myhandles.tf_2d_cbox, 'Value');
+if dim_2 == 1
+    view(2);
+else
+    view(3);
+end
+
+function tf_gray_cbox_Callback(hObject, eventdata, handles)
+myhandles = guihandles(hObject);
+grayscale = get(myhandles.tf_gray_cbox, 'Value');
+if grayscale == 1
+    colormap(gray);
+else
+    colormap(jet);
+end
+
+%function tf_channel_popupmenu_Callback(hObject, eventdata, handles)
