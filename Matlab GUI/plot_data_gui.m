@@ -22,7 +22,7 @@ function varargout = plot_data_gui(varargin)
 
 % Edit the above text to modify the response to help plot_data_gui
 
-% Last Modified by GUIDE v2.5 08-Feb-2015 23:15:23
+% Last Modified by GUIDE v2.5 07-Mar-2015 22:29:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,6 +72,9 @@ function varargout = plot_data_gui_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+% ----------
+%  Main GUI
+% ----------
 
 % --- Executes on button press in import_data_button.
 function import_data_button_Callback(hObject, eventdata, handles)
@@ -79,14 +82,13 @@ function import_data_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [FileName,PathName] = uigetfile('*.csv','Select the CSV file');
-%M = csvread(FileName)
 global T;
 T = readtable(FileName,'Delimiter',',');
 
 
-% --- Executes on button press in create_graph_button.
-function create_graph_button_Callback(hObject, eventdata, handles)
-% hObject    handle to create_graph_button (see GCBO)
+% --- Executes on button press in create_mag_time_graph_button.
+function create_mag_time_graph_button_Callback(hObject, eventdata, handles)
+% hObject    handle to create_mag_time_graph_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -101,59 +103,101 @@ else
     pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
                     'String',{'AF3','F7','F3','FC5','T7','P7','O1','O2',...
                     'P8','T8','FC6','F4','F8','AF4'},...
-                    'Callback',@channel_popupmenu_Callback,...
-                    'Tag','channel_menu',...
+                    'Callback',@mt_channel_popupmenu_Callback,...
+                    'Tag','mt_channel_menu',...
                     'Value',1,'Position',[100 20 130 20]);
+%     pm2h = uicontrol('Parent',ph,'Style','popupmenu',...
+%                     'String',{'delta','theta','alpha','beta','gamma'},...
+%                     'Callback',@mt_band_popupmenu_Callback,...
+%                     'Tag','mt_band_menu',...
+%                     'Value',1,'Position',[250 20 130 20]);
+    freq_bin = {};
+    for i = 1:63
+       freq_bin = [freq_bin, strcat(num2str(i-1),'Hz')];
+    end
     pm2h = uicontrol('Parent',ph,'Style','popupmenu',...
-                    'String',{'delta','theta','alpha','beta','gamma'},...
-                    'Callback',@band_popupmenu_Callback,...
-                    'Tag','band_menu',...
+                    'String',freq_bin,...
+                    'Callback',@mt_freq_popupmenu_Callback,...
+                    'Tag','mt_freq_menu',...
                     'Value',1,'Position',[250 20 130 20]);
     pb1h = uicontrol('Parent',ph,'Style','pushbutton','String','Add',...
-                    'Callback',@add_button_Callback,...
+                    'Callback',@mt_add_button_Callback,...
                     'Position',[400 10 60 40]);
     pb2h = uicontrol('Parent',ph,'Style','pushbutton','String','Clear',...
-                    'Callback',@clear_button_Callback,...
+                    'Callback',@mt_clear_button_Callback,...
                     'Position',[490 10 60 40]);
     pb3h = uicontrol('Parent',ph,'Style','pushbutton',...
                     'String','Moving Average',...
-                    'Callback',@ma_button_Callback,...
+                    'Callback',@mt_ma_button_Callback,...
                     'Position',[580 10 100 40]);
     grid on;
     hold on;
+    title('Magnitude-time plot');
     xlabel('time(s)');
     ylabel('magnitude');
 end
-            
+
+% --- Executes on button press in create_time_freq_graph_button.
+function create_time_freq_graph_button_Callback(hObject, eventdata, handles)
+% hObject    handle to create_time_freq_graph_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global T;
+% Check if csv data is imported
+if ~istable(T)
+    h = warndlg('No data imported!');
+else
+    f = figure('ToolBar','figure','OuterPosition',[230 250 1000 670]);
+    ah = axes('Parent',f,'Tag','axes','Position', [.15 .25 .7 .7]);
+    ph = uipanel('Parent',f,'Title','Add Data','Position',[.15 .06 .7 .12]);
+    pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
+                    'String',{'AF3','F7','F3','FC5','T7','P7','O1','O2',...
+                    'P8','T8','FC6','F4','F8','AF4'},...
+                    'Callback',@tf_channel_popupmenu_Callback,...
+                    'Tag','tf_channel_menu',...
+                    'Value',1,'Position',[100 20 130 20]);
+    pb1h = uicontrol('Parent',ph,'Style','pushbutton','String','Add',...
+                    'Callback',@tf_add_button_Callback,...
+                    'Position',[400 10 60 40]);
+end
+
+% ----------------------
+%  Magnitude-time graph
+% ----------------------
 % --- Executes on button press in add_button.
-function add_button_Callback(hObject, eventdata, handles)
+function mt_add_button_Callback(hObject, eventdata, handles)
 global T;
 myhandles = guihandles(hObject);
 mydata = guidata(hObject);
-channel_array = get(myhandles.channel_menu, 'String');
-channel_index = get(myhandles.channel_menu, 'Value');
+channel_array = get(myhandles.mt_channel_menu, 'String');
+channel_index = get(myhandles.mt_channel_menu, 'Value');
 channel = channel_array{channel_index};
-band_array = get(myhandles.band_menu, 'String');
-band_index = get(myhandles.band_menu, 'Value');
-band = band_array{band_index};
-variable = strcat(channel,'_',band,'_');
+%band_array = get(myhandles.mt_band_menu, 'String');
+%band_index = get(myhandles.mt_band_menu, 'Value');
+freq_array = get(myhandles.mt_freq_menu, 'String');
+freq_index = get(myhandles.mt_freq_menu, 'Value');
+%band = band_array{band_index};
+freq = freq_array{freq_index};
+%variable = strcat(channel,'_',band,'_');
+variable = strcat(channel,'_',freq,'_');
 if isfield(mydata,'legend')
-    if isempty(strfind(mydata.legend,strcat(channel,'(',band,')')))
+    %if isempty(strfind(mydata.legend,strcat(channel,'(',band,')')))
+    if isempty(strfind(mydata.legend,strcat(channel,'(',freq,')')))
         plot(T.time, T{:, {variable}}, 'Color', rand([1,3]));
-        mydata.legend = strcat(mydata.legend,',',channel,'(',band,')');
-        %mydata.legend = strcat(mydata.legend,',',channel,'-',band);
+        %mydata.legend = strcat(mydata.legend,',',channel,'(',band,')');
+        mydata.legend = strcat(mydata.legend,',',channel,'(',freq,')');
         legend(strsplit(mydata.legend,','));
     end
 else
     plot(T.time, T{:, {variable}}, 'Color', rand([1,3]));
-    mydata.legend = strcat(channel,'(',band,')');
-    %mydata.legend = strcat(channel,'-',band);
+    %mydata.legend = strcat(channel,'(',band,')');
+    mydata.legend = strcat(channel,'(',freq,')');
     legend(strsplit(mydata.legend,','));
 end
 guidata(hObject, mydata);
 
 
-function clear_button_Callback(hObject, eventdata, handles)
+function mt_clear_button_Callback(hObject, eventdata, handles)
 myhandles = guihandles(hObject);
 cla(myhandles.axes);
 legend('off');
@@ -161,7 +205,7 @@ mydata = guidata(hObject);
 mydata = rmfield(mydata,'legend');
 guidata(hObject, mydata);
 
-function ma_button_Callback(hObject, eventdata, handles)
+function mt_ma_button_Callback(hObject, eventdata, handles)
 global T;
 myhandles = guihandles(hObject);
 mydata = guidata(hObject);
@@ -198,19 +242,40 @@ function ma = moving_average(y,window)
 mask = ones(1,window)/window;
 ma = conv(y,mask,'same');
 
+function mt_channel_popupmenu_Callback(hObject, eventdata, handles)
 
-function channel_popupmenu_Callback(hObject, eventdata, handles)
-% myhandles = guidata(hObject);
-% items = get(hObject,'String');
-% index_selected = get(hObject,'Value');
-% item_selected = items{index_selected};
-% myhandles.channel = item_selected;
-% guidata(hObject, myhandles);
+function mt_freq_popupmenu_Callback(hObject, eventdata, handles)
 
-function band_popupmenu_Callback(hObject, eventdata, handles)
-% myhandles = guidata(hObject);
-% items = get(hObject,'String');
-% index_selected = get(hObject,'Value');
-% item_selected = items{index_selected};
-% myhandles.band = item_selected;
-% guidata(hObject, myhandles);
+% ----------------------
+%  Time-frequency graph
+% ----------------------
+
+function tf_add_button_Callback(hObject, eventdata, handles)
+global T;
+myhandles = guihandles(hObject);
+mydata = guidata(hObject);
+channel_array = get(myhandles.tf_channel_menu, 'String');
+channel_index = get(myhandles.tf_channel_menu, 'Value');
+channel = channel_array{channel_index};
+%create cell array of channel
+column = {};
+for i = 1:63
+    column = [column, strcat(channel,'_',num2str(i-1),'Hz_')];
+end
+X = T.time;
+Y = zeros(1,63);
+for i = 1:63
+    Y(1,i) = i-1;
+end
+Z = zeros(length(Y),length(X));
+for i = 1:63
+    Z(i,:) = T{:,column(i)}.';
+end
+surf(X,Y,Z,'EdgeColor','None','facecolor','interp');
+title(strcat('Time-frequency plot of ',channel));
+xlabel('time(s)');
+ylabel('freq(Hz)');
+zlabel('mag');
+%TODO: check box for 2D or 3D
+
+function tf_channel_popupmenu_Callback(hObject, eventdata, handles)
