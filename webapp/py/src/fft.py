@@ -63,7 +63,7 @@ def compute_fft(data):
 	#Check frequencies
 	timestep = 1/mindcraft.samplingFreq
 	freq = np.fft.fftfreq(int(mindcraft.samplingFreq), d=timestep)
-	print "Frequencies: "+str(freq)
+	#print "Frequencies: "+str(freq)
 
 	# Comput fft amplitude spectrum
 	normalization_factor = 2/(mindcraft.fftSamplingNum)
