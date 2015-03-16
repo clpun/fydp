@@ -422,7 +422,6 @@ def write_ind_comp(csvDataBuffer):
 	for index in range(0,len(csvDataBuffer)-1):
 		csv_data += str(int(index)*oneFftPeriod) + ","
 		for channel in sensor_names:
-			print str(len(csvDataBuffer[index][channel]))
 			for ii in range(0,len(csvDataBuffer[index][channel])-1):
 				csv_data += str(csvDataBuffer[index][channel][ii]) + ","
 		csv_data += "\n"

@@ -185,7 +185,6 @@ def write_ind_comp():
 	csv_data += "\n"
 	for index in csvDataBuffer.keys():
 		csv_data += str(int(index)*samplingPeriod) + ","
-		print str(len(csvDataBuffer[index]['indiv_component'][channel]))
 		for channel in channels:
 			for ii in range(0,len(csvDataBuffer[index]['indiv_component'][channel])):
 				csv_data += str(csvDataBuffer[index]['indiv_component'][channel][str(ii)]) + ","
