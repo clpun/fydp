@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import time
 import math
 import pygame
@@ -17,6 +18,8 @@ from threading import Event
 
 data_thread = None
 
+testcase = "429"
+testdescrip = "rndbeatlast15s"
 SAMPLE_RATE = 44100
 index = 0
 mute_toggle = True
@@ -67,7 +70,9 @@ data = {}
 samplingFreq = 128.0
 fftSamplingNum = 26.0
 oneFftPeriod = fftSamplingNum/samplingFreq
+duration = math.ceil(30.0/oneFftPeriod)
 
+donePlaying = False
 beat_freq = 10
 should_change_freq = False
 should_mute = True
@@ -123,6 +128,7 @@ def change_frequency():
 	global channels
 	global current_left_chan
 	global current_right_chan
+	global donePlaying
 	global beat_freq
 	global should_mute
 	global should_change_freq
@@ -133,7 +139,7 @@ def change_frequency():
 	left_chan_index = 10
 	right_chan_index = 11
 
-	while True: 
+	while (not donePlaying): 
 		threadLock.acquire()
 		if should_mute == False and should_change_freq == True:
 			#print "Beat frequency: "+str(beat_freq)
@@ -218,6 +224,7 @@ def retrieve_headset_data():
 	global index
 	#global mute_toggle
 	#global data_thread
+	global donePlaying
 	global beat_freq
 	global should_mute
 	global should_change_freq
@@ -252,7 +259,7 @@ def retrieve_headset_data():
 
 	try:
 		sample_counter = 0
-		while True:
+		while index <= duration:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
 
@@ -368,30 +375,60 @@ def retrieve_headset_data():
 
 					data[index][sensor] = fft_comp
 					if sensor == 'T7' or sensor == 'T8' or sensor == 'P7' or sensor =='P8' :
-						print sensor + " beta:" + cal_rel_power(fft_comp,[3,4])
+						#print sensor + " beta:" + cal_rel_power(fft_comp,[3,4])
+						pass
 
 				# Clear buffers
 				clear_buffers()
 				sample_counter = 0
 				index += 1
-
-				freq_index += 1
-				if freq_index > 20:
-					freq_index = 5
-				if index%2 == 0:
+				freq_index = randint(5,40)
+				# if freq_index > 20:
+				# 	freq_index = 5
+				if index <= 15.0/oneFftPeriod:
 					threadLock.acquire()
-					should_mute = False
-					#should_mute = not should_mute
+					if not should_mute:
+						should_mute = True
+						#should_mute = not should_mute
+						should_change_freq = True
+						beat_freq = 5
+					threadLock.release()
+				else:
+					threadLock.acquire()
+					if should_mute:
+						should_mute = False
+						#should_mute = not should_mute
 					should_change_freq = True
 					beat_freq = freq_index
 					threadLock.release()
-
 			gevent.sleep(0)
 
+		threadLock.acquire()
+		donePlaying = True
+		threadLock.release()
+		write_ind_comp(data)
 	except KeyboardInterrupt:
 		headset.close()
 	finally:
 		headset.close()
+
+def write_ind_comp(csvDataBuffer):
+	#print str(csvDataBuffer[0]['indiv_component'])
+	csv_data = "time,"
+	for channel in sensor_names:
+		for ii in range(0,len(csvDataBuffer[0][channel])-1):
+			csv_data += channel + "(" + str(ii) + " Hz),"
+	csv_data += "\n"
+	for index in range(1,len(csvDataBuffer)-1):
+		csv_data += str(int(index)*oneFftPeriod) + ","
+		for channel in sensor_names:
+			for ii in range(0,len(csvDataBuffer[index][channel])-1):
+				csv_data += str(csvDataBuffer[index][channel][ii]) + ","
+		csv_data += "\n"
+	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
+	fo.write(csv_data)
+	fo.close()
+	return
 
 def cal_rel_power(fftobj,rg):
 	median = 0.0
@@ -419,7 +456,8 @@ def verify_user():
 
 	user_verify = False
 	while not user_verify:
-		user_name = raw_input("User id: ")
+		#user_name = raw_input("User id: ")
+		user_name = "lhchung"
 		if user_name.isalnum():
 			user_preference.user_name = user_name
 			try:
@@ -474,7 +512,8 @@ def verify_user():
 					pref_file.close()
 					user_verify = True
 				else:
-					prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
+					prompt_calculate_average = "Y"
+					#prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
 					while not (prompt_calculate_average == 'Y' or prompt_calculate_average == 'N'):
 						prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
 					if prompt_calculate_average == 'Y':
@@ -635,5 +674,6 @@ def clear_buffers():
 	print "played"'''
 
 if __name__ == "__main__":
+	verify_user()
 	initialize()
 	retrieve_headset_data()
