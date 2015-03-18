@@ -27,9 +27,9 @@ x = np.rec.array([
                                 ('type', '|S8'),
                                 ('power', 'float')])
 
-f_value, p_value = stats.f_oneway(x.power[0:9], x.power[10:19])
-print f_value, p_value
+# f_value, p_value = stats.f_oneway(x.power[0:9], x.power[10:19])
+# print f_value, p_value
 
-result = pairwise_tukeyhsd(x['power'], x['type'])
+# result = pairwise_tukeyhsd(x['power'], x['type'])
 
-print result
+print type(x['power'])
