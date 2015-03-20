@@ -19,6 +19,7 @@ test_duration = change_rate*item_num
 after_duration = 5.0
 testcase = "600"
 testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
+test_numbers = []
 index = 0
 test_can_start = False
 screen_width = 0
@@ -236,7 +237,7 @@ def retrieve_headset_data():
 def write_ind_comp(csvDataBuffer):
 	global root
 
-	print "Writing data to csv file"
+	#print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
 		for ii in range(0,len(csvDataBuffer[0][channel])-1):
@@ -251,7 +252,7 @@ def write_ind_comp(csvDataBuffer):
 	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
-	print "Done"
+	#print "Done"
 	root.destroy()
 
 	return
@@ -507,13 +508,14 @@ class MainFrame(Frame):
 		global label_text
 		global screen_width
 		global screen_height
+		global item_num
 
 		self.parent.title("Temporal Working Memory Test")
 
 		#start_button = Button(self, text="Start", command=start_button_callback)
 		#start_button.place(x=0, y=0)
 
-		label_text.set("1")
+		label_text.set(str(item_num))
 		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
 		self.num_label.place(x=math.ceil(screen_width/2-40), y=math.ceil(screen_height/2-160))
 
@@ -538,6 +540,7 @@ def change_num():
 	global test_can_start
 	global should_end_test
 	global control_duration
+	global item_num
 	global change_rate
 	global test_duration
 	global after_duration
@@ -553,19 +556,20 @@ def change_num():
 		#print "Time counter"+str(time_counter)
 		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
 			num = randint(1, limit)
+			test_numbers.append(num)
 			label_text.set(str(num))
 			app.change_colour("green")
 			root.update()
 		elif time_counter > (control_duration+test_duration):
 			app.change_colour("red")
-			label_text.set("1")
+			label_text.set(str(item_num))
 			root.update()
 
 		time.sleep(change_rate)
 		time_counter += change_rate
 
 	should_end_test = True
-	print "End test"
+	print "End test = " + str(test_numbers)
 
 def open_application():
 	global label_text
