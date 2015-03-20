@@ -234,6 +234,8 @@ def retrieve_headset_data():
 		headset.close()
 
 def write_ind_comp(csvDataBuffer):
+	global root
+
 	print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
@@ -250,6 +252,8 @@ def write_ind_comp(csvDataBuffer):
 	fo.write(csv_data)
 	fo.close()
 	print "Done"
+	root.destroy()
+
 	return
 
 def cal_rel_power(fftobj,rg):
