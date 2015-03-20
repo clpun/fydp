@@ -65,8 +65,6 @@ data = {}
 samplingFreq = 128.0
 fftSamplingNum = 26.0
 oneFftPeriod = fftSamplingNum/samplingFreq
-run_duration = 11.5
-duration = math.ceil(run_duration/oneFftPeriod)
 
 def retrieve_headset_data():
 	global headset
@@ -503,8 +501,8 @@ class MainFrame(Frame):
 
 		self.parent.title("Temporal Working Memory Test")
 
-		start_button = Button(self, text="Start", command=start_button_callback)
-		start_button.place(x=0, y=0)
+		#start_button = Button(self, text="Start", command=start_button_callback)
+		#start_button.place(x=0, y=0)
 
 		label_text.set("1")
 		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
@@ -515,8 +513,8 @@ class MainFrame(Frame):
 	def change_colour(self, colour):
 		self.num_label.config(fg=colour)
 
-def start_button_callback():
-	print "In start_button_callback"
+def start_test():
+	print "In start_test"
 	data_thread = threading.Thread(target=retrieve_headset_data, args=())
 	data_thread.start()
 
@@ -525,7 +523,6 @@ def start_button_callback():
 	change_num_thread.start()
 
 def change_num():
-	global run_duration
 	global label_text
 	global root
 	global app
@@ -533,11 +530,12 @@ def change_num():
 	global should_end_test
 
 	control_duration = 5.0
-	test_duration = 1.5
+	change_rate = 0.25
+	test_duration = change_rate*5
 	after_duration = 5.0
-	change_rate = 0.5
 	time_counter = 0.0
 	limit = 10
+	run_duration = control_duration+test_duration+after_duration 
 
 	while test_can_start == False:
 		pass
@@ -573,6 +571,10 @@ def open_application():
 	label_text = StringVar()
 	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
 	app = MainFrame(root)
+
+	time.sleep(1)
+	start_test()
+
 	root.mainloop()
 
 if __name__ == "__main__":
