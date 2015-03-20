@@ -14,12 +14,13 @@ from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
 app = None
 control_duration = 5.0
 change_rate = 0.4
-item_num = 5
+item_num = 7
 test_duration = change_rate*item_num
 after_duration = 5.0
 testcase = "600"
 testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
 test_numbers = []
+prev_num = 0
 index = 0
 test_can_start = False
 screen_width = 0
@@ -219,9 +220,6 @@ def retrieve_headset_data():
 						fft_comp = f4_fft
 
 					data[index][sensor] = fft_comp
-					if sensor == 'T7' or sensor == 'T8' or sensor == 'P7' or sensor =='P8' :
-						#print sensor + " beta:" + cal_rel_power(fft_comp,[3,4])
-						pass
 
 				# Clear buffers
 				clear_buffers()
@@ -556,6 +554,10 @@ def change_num():
 		#print "Time counter"+str(time_counter)
 		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
 			num = randint(1, limit)
+			if len(test_numbers) > 0:
+				while prev_num == num:
+					num = randint(1,limit)
+			prev_num = num
 			test_numbers.append(num)
 			label_text.set(str(num))
 			app.change_colour("green")
