@@ -105,6 +105,7 @@ def retrieve_headset_data():
 	try:
 		sample_counter = 0
 		test_can_start = True
+		headset.packets.queue.clear()
 		while should_end_test == False:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
