@@ -11,6 +11,12 @@ import threading
 from ..lib import emotiv
 from Tkinter import Tk, Canvas, Frame, BOTH
 
+sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+data = {}
+samplingFreq = 128.0
+fftSamplingNum = 26.0
+oneFftPeriod = fftSamplingNum/samplingFreq
+
 app = None
 testcase = "700"
 testdescrip = "visuospatial_mem_task"
@@ -19,6 +25,11 @@ test_can_start = False
 screen_width = 0
 screen_height = 0
 should_end_test = False
+control_duration = 5.0
+test_duration = 0.5
+after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration
+index_limit = math.ceil(run_duration/oneFftPeriod)
 
 class UserPreference:
 	user_name = "User"
@@ -60,12 +71,6 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
-sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
-data = {}
-samplingFreq = 128.0
-fftSamplingNum = 26.0
-oneFftPeriod = fftSamplingNum/samplingFreq
-
 def retrieve_headset_data():
 	global headset
 	global data
@@ -75,6 +80,7 @@ def retrieve_headset_data():
 	global index
 	global test_can_start
 	global should_end_test
+	global index_limit
 
 	F3 = {}
 	FC5 = {}
@@ -99,7 +105,7 @@ def retrieve_headset_data():
 		sample_counter = 0
 		test_can_start = True
 		headset.packets.queue.clear()
-		while should_end_test == False:
+		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
 
@@ -557,6 +563,7 @@ def open_application():
 
 	root = Tk()
 	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
+	screen_height = screen_height-50
 	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
 	app = MainFrame(root)
 
@@ -569,13 +576,12 @@ def run_test():
 	global app
 	global should_end_test
 	global test_can_start
+	global control_duration
+	global test_duration
+	global after_duration
 
 	while test_can_start == False:
 		pass
-
-	control_duration = 5.0
-	test_duration = 0.5
-	after_duration = 5.0
 
 	time.sleep(control_duration)
 	app.create_triangles()

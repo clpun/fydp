@@ -11,17 +11,25 @@ from random import randint
 from ..lib import emotiv
 from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
 
+sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+data = {}
+samplingFreq = 128.0
+fftSamplingNum = 26.0
+oneFftPeriod = fftSamplingNum/samplingFreq
+
 app = None
 control_duration = 5.0
 change_rate = 0.4
 item_num = 7
 test_duration = change_rate*item_num
 after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration 
 testcase = "630"
 testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
 test_numbers = []
 prev_num = 0
 index = 0
+index_limit = math.ceil(run_duration/oneFftPeriod)
 test_can_start = False
 screen_width = 0
 screen_height = 0
@@ -67,12 +75,6 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
-sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
-data = {}
-samplingFreq = 128.0
-fftSamplingNum = 26.0
-oneFftPeriod = fftSamplingNum/samplingFreq
-
 def retrieve_headset_data():
 	global headset
 	global data
@@ -106,7 +108,8 @@ def retrieve_headset_data():
 		sample_counter = 0
 		test_can_start = True
 		headset.packets.queue.clear()
-		while should_end_test == False:
+		#while should_end_test == False:
+		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
 
@@ -543,9 +546,9 @@ def change_num():
 	global change_rate
 	global test_duration
 	global after_duration
+	global run_duration
 	time_counter = 0.0
 	limit = 9
-	run_duration = control_duration+test_duration+after_duration 
 
 	while test_can_start == False:
 		pass
