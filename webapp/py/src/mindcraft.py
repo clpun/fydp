@@ -273,6 +273,7 @@ def find_mean():
     raw_input("Need to Calculate signal average. Do NOT wear the headset. Please press enter to continue...")
     print("Calculating signal average. Please wait...")
 
+    headset.packets.queue.clear()
     while counter < 1000:
         print "..." + str((counter+1)/10) + "%"
         # Retrieve emotiv packet
