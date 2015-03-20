@@ -12,8 +12,13 @@ from ..lib import emotiv
 from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
 
 app = None
+control_duration = 5.0
+change_rate = 0.4
+item_num = 5
+test_duration = change_rate*item_num
+after_duration = 5.0
 testcase = "600"
-testdescrip = "temporal_working_mem"
+testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
 index = 0
 test_can_start = False
 screen_width = 0
@@ -528,13 +533,12 @@ def change_num():
 	global app
 	global test_can_start
 	global should_end_test
-
-	control_duration = 5.0
-	change_rate = 0.25
-	test_duration = change_rate*5
-	after_duration = 5.0
+	global control_duration
+	global change_rate
+	global test_duration
+	global after_duration
 	time_counter = 0.0
-	limit = 10
+	limit = 9
 	run_duration = control_duration+test_duration+after_duration 
 
 	while test_can_start == False:
@@ -542,7 +546,7 @@ def change_num():
 
 	print "Start test"
 	while time_counter < run_duration:
-		print "Time counter"+str(time_counter)
+		#print "Time counter"+str(time_counter)
 		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
 			num = randint(1, limit)
 			label_text.set(str(num))
