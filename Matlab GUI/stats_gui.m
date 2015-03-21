@@ -97,11 +97,6 @@ function [header, FileName, array3D] = import_multiple_csv_files()
     [FileName, PathName] = uigetfile('*.csv','Select csv files','MultiSelect', 'on');
     filename_strings = char(FileName);
     
-%     filename = strtrim(filename_strings(1,:));
-%     T = readtable(filename,'Delimiter',',');
-%     tmpArray = [T.Properties.VariableNames;table2cell(T)];
-%     array3D = tmpArray;
-    
     for x = 1:length(FileName)
         filename = strtrim(filename_strings(x,:));
         T = readtable(filename,'Delimiter',',');
@@ -149,9 +144,6 @@ function [pass_anova, pass_tukey] = anova_tukey(a_mean, b_mean, c_mean, num_test
     end
         
 function [a_mean, b_mean, c_mean] = Process3Darray(data_3D)
-    % data from import_data
-    % t_value returned from Calc_t_value(a,b) is an array
-    % return 2D array of t_values from diff test cases
     [m,n,p] = size(data_3D);
     %t_value_2D = [];
     %for z=1:p %each testcase
@@ -180,8 +172,7 @@ function [a_mean, b_mean, c_mean] = Process3Darray(data_3D)
     %end
 
 function write_to_csv(filename,array)
-    %csvwrite('p_values_tukey.csv',array);
-    %xlswrite('t_values.csv',array);
+    %csvwrite(filename,array);
     %write line by line
     filehandle = fopen(filename,'wt');
     fprintf(filehandle, 'channel,freq,C1,C2\n');
@@ -189,12 +180,3 @@ function write_to_csv(filename,array)
         fprintf(filehandle, '%s,%d,%d,%d\n', array{x,:});
     end
     fclose(filehandle);
-
-function test_func(data_3D)
-    [m,n,p] = size(data_3D);
-    mat = zeros(m,n);
-    for row=2:m
-        for col=2:n
-            mat(row,col) = data_3D(row,col,:);
-        end
-    end
