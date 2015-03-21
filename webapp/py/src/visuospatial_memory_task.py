@@ -1,24 +1,35 @@
 #!/usr/bin/env python
 import os
+import time
 import math
-from random import randint
-from ..lib import emotiv
+import random
 import signal_preprocessing as sp
 import gevent
 import fft
-import time
-import numpy as np
-from PIL import Image
-import sys
 import threading
-import matplotlib
-matplotlib.use('TkAgg') # do this before importing pylab
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from ..lib import emotiv
+from Tkinter import Tk, Canvas, Frame, BOTH
 
-data_thread = None
+sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+data = {}
+samplingFreq = 128.0
+fftSamplingNum = 26.0
+oneFftPeriod = fftSamplingNum/samplingFreq
+
+app = None
+testcase = "700"
+testdescrip = "visuospatial_mem_task"
 index = 0
+test_can_start = False
+screen_width = 0
+screen_height = 0
+should_end_test = False
+control_duration = 5.0
+test_duration = 0.5
+after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration
+index_limit = math.ceil(run_duration/oneFftPeriod)
 
 class UserPreference:
 	user_name = "User"
@@ -60,68 +71,6 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
-sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
-data = {}
-samplingFreq = 128.0
-fftSamplingNum = 26.0
-oneFftPeriod = fftSamplingNum/samplingFreq
-duration = math.ceil(30.0/oneFftPeriod)
-threadLock = threading.Lock()
-GammaIsHigh = False
-
-def use_timer (interval, worker_func, iterations = 0):
-	if iterations != 1:
-		threading.Timer (
-		interval,
-		use_timer, [interval, worker_func, 0 if iterations == 0 else iterations-1]
-		).start ();
-
-	worker_func ();
-
-def show_image():
-	global IsBlack
-	global GammaIsHigh
-	global prev_time
-	global ax
-	global fig
-	print time.time() - prev_time
-	prev_time = time.time()
-
-	threadLock.acquire()
-	if IsBlack:
-		ax.set_axis_bgcolor((0, 0, 0))
-	elif GammaIsHigh:
-		ax.set_axis_bgcolor((0, 1, 0))
-	else:
-		ax.set_axis_bgcolor((1, 1, 1))
-	threadLock.release()
-
-	fig.canvas.draw()
-	IsBlack = not IsBlack
-	#print "Hello, World!"
-
-def execute():
-	global IsBlack
-	global prev_time
-	global ax
-	global fig
-
-	fig = plt.figure(figsize=(14, 14),frameon=False)
-	fig.patch.set_facecolor('black')
-	ax = fig.add_axes([0, 0, 1, 1])
-	#ax.axis('off')
-	IsBlack = True
-	prev_time = time.time()
-	#image = np.random.randn(10,10)
-	#im=plt.imshow(image)
-
-	interval = 0.25
-	use_timer (interval, show_image, 100)
-
-	mng = plt.get_current_fig_manager()                                   # you get normal size
-	mng.window.wm_geometry("1000x800")
-	plt.show()
-
 def retrieve_headset_data():
 	global headset
 	global data
@@ -129,7 +78,9 @@ def retrieve_headset_data():
 	global gyroY
 	global battery
 	global index
-	global GammaIsHigh
+	global test_can_start
+	global should_end_test
+	global index_limit
 
 	F3 = {}
 	FC5 = {}
@@ -149,12 +100,12 @@ def retrieve_headset_data():
 	headset = emotiv.Emotiv()
 	gevent.spawn(headset.setup)
 	gevent.sleep(1)
-	data_thread = threading.Thread(target=execute, args=())
-	data_thread.start()
 
 	try:
 		sample_counter = 0
-		while index <= duration:
+		test_can_start = True
+		headset.packets.queue.clear()
+		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
 
@@ -278,16 +229,6 @@ def retrieve_headset_data():
 				sample_counter = 0
 				index += 1
 
-				if index % 25 == 0:
-					threadLock.acquire()
-					GammaIsHigh = not GammaIsHigh
-					threadLock.release()
-
-			gevent.sleep(0)
-
-		threadLock.acquire()
-		donePlaying = True
-		threadLock.release()
 		write_ind_comp(data)
 	except KeyboardInterrupt:
 		headset.close()
@@ -295,7 +236,9 @@ def retrieve_headset_data():
 		headset.close()
 
 def write_ind_comp(csvDataBuffer):
-	#print str(csvDataBuffer[0]['indiv_component'])
+	global root
+
+	print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
 		for ii in range(0,len(csvDataBuffer[0][channel])-1):
@@ -304,13 +247,16 @@ def write_ind_comp(csvDataBuffer):
 	for index in range(0,len(csvDataBuffer)-1):
 		csv_data += str(int(index)*oneFftPeriod) + ","
 		for channel in sensor_names:
-			print str(len(csvDataBuffer[index][channel]))
 			for ii in range(0,len(csvDataBuffer[index][channel])-1):
 				csv_data += str(csvDataBuffer[index][channel][ii]) + ","
 		csv_data += "\n"
 	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
+	print "Done"
+
+	root.destroy()
+
 	return
 
 def cal_rel_power(fftobj,rg):
@@ -552,5 +498,108 @@ def clear_buffers():
 	del FC6Buffer[:]
 	del F4Buffer[:]
 
+class MainFrame(Frame):
+	canvas = None
+	x_num_blocks = 0
+	y_num_blocks = 0
+	x_steps = 0
+	y_steps = 0
+	block_width = 0
+	block_height = 0
+
+	def __init__(self, parent):
+		Frame.__init__(self, parent)
+		self.parent = parent
+		self.init_UI()
+
+	def init_UI(self):
+		self.parent.title("Visuospatial Memory Task")
+		self.pack(fill=BOTH, expand=1)
+
+		self.x_num_blocks = 8
+		self.y_num_blocks = 8
+		self.x_steps = math.ceil(screen_width/self.x_num_blocks)
+		self.y_steps = math.ceil(screen_height/self.y_num_blocks)
+		self.block_width = self.x_steps
+		self.block_height = self.y_steps
+		self.canvas = Canvas(self)
+		for i in range(0, self.x_num_blocks):
+			for j in range(0, self.y_num_blocks):
+				corner_x = i*self.x_steps
+				corner_y = j*self.y_steps
+				self.canvas.create_rectangle(corner_x, corner_y, corner_x+self.block_width, 
+					corner_y+self.block_height, outline="black", fill="white")
+
+		self.canvas.pack(fill=BOTH, expand=1)
+
+	def create_triangles(self):
+		num_triangles = 4
+		num_choices_x = range(0, self.x_num_blocks)
+		num_choices_y = range(0, self.y_num_blocks)
+		for i in range(0, num_triangles):
+			x = random.choice(num_choices_x)
+			y = random.choice(num_choices_y)
+			num_choices_x = range(0, x)+range(x+1, self.x_num_blocks)
+			num_choices_y = range(0, y)+range(y+1, self.y_num_blocks)
+
+			points = [math.ceil(x*self.x_steps+self.block_width/2), y*self.y_steps, x*self.x_steps, (y+1)*self.y_steps, (x+1)*self.x_steps, (y+1)*self.y_steps]
+			self.canvas.create_polygon(points, outline="green", fill="green", width=2)
+
+	def clear_triangles(self):
+		# TODO
+		for i in range(0, self.x_num_blocks):
+			for j in range(0, self.y_num_blocks):
+				corner_x = i*self.x_steps
+				corner_y = j*self.y_steps
+				self.canvas.create_rectangle(corner_x, corner_y, corner_x+self.block_width, 
+					corner_y+self.block_height, outline="black", fill="white")
+		pass
+
+def open_application():
+	global root
+	global app
+	global screen_width
+	global screen_height
+
+	root = Tk()
+	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
+	screen_height = screen_height-50
+	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
+	app = MainFrame(root)
+
+	time.sleep(1)
+	start_test()
+
+	root.mainloop()
+
+def run_test():
+	global app
+	global should_end_test
+	global test_can_start
+	global control_duration
+	global test_duration
+	global after_duration
+
+	while test_can_start == False:
+		pass
+
+	time.sleep(control_duration)
+	app.create_triangles()
+	time.sleep(test_duration)
+	app.clear_triangles()
+	time.sleep(after_duration)
+
+	should_end_test = True
+
+def start_test():
+	print "In start_test"
+	data_thread = threading.Thread(target=retrieve_headset_data, args=())
+	data_thread.start()
+
+	# Run the actual test
+	test_thread = threading.Thread(target=run_test, args=())
+	test_thread.start()
+
 if __name__ == "__main__":
-	retrieve_headset_data()
+	verify_user()
+	open_application()

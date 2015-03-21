@@ -1,24 +1,39 @@
 #!/usr/bin/env python
 import os
+import time
 import math
-from random import randint
-from ..lib import emotiv
 import signal_preprocessing as sp
 import gevent
 import fft
-import time
-import numpy as np
-from PIL import Image
-import sys
 import threading
-import matplotlib
-matplotlib.use('TkAgg') # do this before importing pylab
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from random import randint
+from ..lib import emotiv
+from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
 
-data_thread = None
+sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+data = {}
+samplingFreq = 128.0
+fftSamplingNum = 26.0
+oneFftPeriod = fftSamplingNum/samplingFreq
+
+app = None
+control_duration = 5.0
+change_rate = 0.4
+item_num = 7
+test_duration = change_rate*item_num
+after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration 
+testcase = "630"
+testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
+test_numbers = []
+prev_num = 0
 index = 0
+index_limit = math.ceil(run_duration/oneFftPeriod)
+test_can_start = False
+screen_width = 0
+screen_height = 0
+should_end_test = False
 
 class UserPreference:
 	user_name = "User"
@@ -60,68 +75,6 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
-sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
-data = {}
-samplingFreq = 128.0
-fftSamplingNum = 26.0
-oneFftPeriod = fftSamplingNum/samplingFreq
-duration = math.ceil(30.0/oneFftPeriod)
-threadLock = threading.Lock()
-GammaIsHigh = False
-
-def use_timer (interval, worker_func, iterations = 0):
-	if iterations != 1:
-		threading.Timer (
-		interval,
-		use_timer, [interval, worker_func, 0 if iterations == 0 else iterations-1]
-		).start ();
-
-	worker_func ();
-
-def show_image():
-	global IsBlack
-	global GammaIsHigh
-	global prev_time
-	global ax
-	global fig
-	print time.time() - prev_time
-	prev_time = time.time()
-
-	threadLock.acquire()
-	if IsBlack:
-		ax.set_axis_bgcolor((0, 0, 0))
-	elif GammaIsHigh:
-		ax.set_axis_bgcolor((0, 1, 0))
-	else:
-		ax.set_axis_bgcolor((1, 1, 1))
-	threadLock.release()
-
-	fig.canvas.draw()
-	IsBlack = not IsBlack
-	#print "Hello, World!"
-
-def execute():
-	global IsBlack
-	global prev_time
-	global ax
-	global fig
-
-	fig = plt.figure(figsize=(14, 14),frameon=False)
-	fig.patch.set_facecolor('black')
-	ax = fig.add_axes([0, 0, 1, 1])
-	#ax.axis('off')
-	IsBlack = True
-	prev_time = time.time()
-	#image = np.random.randn(10,10)
-	#im=plt.imshow(image)
-
-	interval = 0.25
-	use_timer (interval, show_image, 100)
-
-	mng = plt.get_current_fig_manager()                                   # you get normal size
-	mng.window.wm_geometry("1000x800")
-	plt.show()
-
 def retrieve_headset_data():
 	global headset
 	global data
@@ -129,7 +82,8 @@ def retrieve_headset_data():
 	global gyroY
 	global battery
 	global index
-	global GammaIsHigh
+	global test_can_start
+	global should_end_test
 
 	F3 = {}
 	FC5 = {}
@@ -149,12 +103,13 @@ def retrieve_headset_data():
 	headset = emotiv.Emotiv()
 	gevent.spawn(headset.setup)
 	gevent.sleep(1)
-	data_thread = threading.Thread(target=execute, args=())
-	data_thread.start()
 
 	try:
 		sample_counter = 0
-		while index <= duration:
+		test_can_start = True
+		headset.packets.queue.clear()
+		#while should_end_test == False:
+		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
 
@@ -269,25 +224,12 @@ def retrieve_headset_data():
 						fft_comp = f4_fft
 
 					data[index][sensor] = fft_comp
-					if sensor == 'T7' or sensor == 'T8' or sensor == 'P7' or sensor =='P8' :
-						#print sensor + " beta:" + cal_rel_power(fft_comp,[3,4])
-						pass
 
 				# Clear buffers
 				clear_buffers()
 				sample_counter = 0
 				index += 1
 
-				if index % 25 == 0:
-					threadLock.acquire()
-					GammaIsHigh = not GammaIsHigh
-					threadLock.release()
-
-			gevent.sleep(0)
-
-		threadLock.acquire()
-		donePlaying = True
-		threadLock.release()
 		write_ind_comp(data)
 	except KeyboardInterrupt:
 		headset.close()
@@ -295,7 +237,9 @@ def retrieve_headset_data():
 		headset.close()
 
 def write_ind_comp(csvDataBuffer):
-	#print str(csvDataBuffer[0]['indiv_component'])
+	global root
+
+	#print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
 		for ii in range(0,len(csvDataBuffer[0][channel])-1):
@@ -304,13 +248,15 @@ def write_ind_comp(csvDataBuffer):
 	for index in range(0,len(csvDataBuffer)-1):
 		csv_data += str(int(index)*oneFftPeriod) + ","
 		for channel in sensor_names:
-			print str(len(csvDataBuffer[index][channel]))
 			for ii in range(0,len(csvDataBuffer[index][channel])-1):
 				csv_data += str(csvDataBuffer[index][channel][ii]) + ","
 		csv_data += "\n"
 	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
+	#print "Done"
+	root.destroy()
+
 	return
 
 def cal_rel_power(fftobj,rg):
@@ -552,5 +498,103 @@ def clear_buffers():
 	del FC6Buffer[:]
 	del F4Buffer[:]
 
+class MainFrame(Frame):
+	num_label = None
+
+	def __init__(self, parent):
+		Frame.__init__(self, parent, background="white")
+		self.parent = parent
+		self.init_UI()
+
+	def init_UI(self):
+		global label_text
+		global screen_width
+		global screen_height
+		global item_num
+
+		self.parent.title("Temporal Working Memory Test")
+
+		#start_button = Button(self, text="Start", command=start_button_callback)
+		#start_button.place(x=0, y=0)
+
+		label_text.set(str(item_num))
+		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
+		self.num_label.place(x=math.ceil(screen_width/2-40), y=math.ceil(screen_height/2-160))
+
+		self.pack(fill=BOTH, expand=1)
+
+	def change_colour(self, colour):
+		self.num_label.config(fg=colour)
+
+def start_test():
+	print "In start_test"
+	data_thread = threading.Thread(target=retrieve_headset_data, args=())
+	data_thread.start()
+
+	# Run the actual test
+	change_num_thread = threading.Thread(target=change_num, args=())
+	change_num_thread.start()
+
+def change_num():
+	global label_text
+	global root
+	global app
+	global test_can_start
+	global should_end_test
+	global control_duration
+	global item_num
+	global change_rate
+	global test_duration
+	global after_duration
+	global run_duration
+	time_counter = 0.0
+	limit = 9
+
+	while test_can_start == False:
+		pass
+
+	print "Start test"
+	while time_counter < run_duration:
+		#print "Time counter"+str(time_counter)
+		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
+			num = randint(1, limit)
+			if len(test_numbers) > 0:
+				while prev_num == num:
+					num = randint(1,limit)
+			prev_num = num
+			test_numbers.append(num)
+			label_text.set(str(num))
+			app.change_colour("green")
+			root.update()
+		elif time_counter > (control_duration+test_duration):
+			app.change_colour("red")
+			label_text.set(str(item_num))
+			root.update()
+
+		time.sleep(change_rate)
+		time_counter += change_rate
+
+	should_end_test = True
+	print "End test = " + str(test_numbers)
+
+def open_application():
+	global label_text
+	global root
+	global app
+	global screen_width
+	global screen_height
+
+	root = Tk()
+	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
+	label_text = StringVar()
+	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
+	app = MainFrame(root)
+
+	time.sleep(1)
+	start_test()
+
+	root.mainloop()
+
 if __name__ == "__main__":
-	retrieve_headset_data()
+	verify_user()
+	open_application()
