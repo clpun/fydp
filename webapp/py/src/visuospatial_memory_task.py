@@ -2,14 +2,14 @@
 import os
 import time
 import math
+import random
 import signal_preprocessing as sp
 import gevent
 import fft
 import threading
 
-from random import randint
 from ..lib import emotiv
-from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
+from Tkinter import Tk, Canvas, Frame, BOTH
 
 sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
 data = {}
@@ -18,22 +18,18 @@ fftSamplingNum = 26.0
 oneFftPeriod = fftSamplingNum/samplingFreq
 
 app = None
-control_duration = 5.0
-change_rate = 0.4
-item_num = 7
-test_duration = change_rate*item_num
-after_duration = 5.0
-run_duration = control_duration+test_duration+after_duration 
-testcase = "630"
-testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
-test_numbers = []
-prev_num = 0
+testcase = "700"
+testdescrip = "visuospatial_mem_task"
 index = 0
-index_limit = math.ceil(run_duration/oneFftPeriod)
 test_can_start = False
 screen_width = 0
 screen_height = 0
 should_end_test = False
+control_duration = 5.0
+test_duration = 0.5
+after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration
+index_limit = math.ceil(run_duration/oneFftPeriod)
 
 class UserPreference:
 	user_name = "User"
@@ -84,6 +80,7 @@ def retrieve_headset_data():
 	global index
 	global test_can_start
 	global should_end_test
+	global index_limit
 
 	F3 = {}
 	FC5 = {}
@@ -108,7 +105,6 @@ def retrieve_headset_data():
 		sample_counter = 0
 		test_can_start = True
 		headset.packets.queue.clear()
-		#while should_end_test == False:
 		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
@@ -224,6 +220,9 @@ def retrieve_headset_data():
 						fft_comp = f4_fft
 
 					data[index][sensor] = fft_comp
+					if sensor == 'T7' or sensor == 'T8' or sensor == 'P7' or sensor =='P8' :
+						#print sensor + " beta:" + cal_rel_power(fft_comp,[3,4])
+						pass
 
 				# Clear buffers
 				clear_buffers()
@@ -239,7 +238,7 @@ def retrieve_headset_data():
 def write_ind_comp(csvDataBuffer):
 	global root
 
-	#print "Writing data to csv file"
+	print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
 		for ii in range(0,len(csvDataBuffer[0][channel])-1):
@@ -254,7 +253,8 @@ def write_ind_comp(csvDataBuffer):
 	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
-	#print "Done"
+	print "Done"
+
 	root.destroy()
 
 	return
@@ -499,86 +499,63 @@ def clear_buffers():
 	del F4Buffer[:]
 
 class MainFrame(Frame):
-	num_label = None
+	canvas = None
+	x_num_blocks = 0
+	y_num_blocks = 0
+	x_steps = 0
+	y_steps = 0
+	block_width = 0
+	block_height = 0
 
 	def __init__(self, parent):
-		Frame.__init__(self, parent, background="white")
+		Frame.__init__(self, parent)
 		self.parent = parent
 		self.init_UI()
 
 	def init_UI(self):
-		global label_text
-		global screen_width
-		global screen_height
-		global item_num
-
-		self.parent.title("Temporal Working Memory Test")
-
-		#start_button = Button(self, text="Start", command=start_button_callback)
-		#start_button.place(x=0, y=0)
-
-		label_text.set(str(item_num))
-		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
-		self.num_label.place(x=math.ceil(screen_width/2-40), y=math.ceil(screen_height/2-160))
-
+		self.parent.title("Visuospatial Memory Task")
 		self.pack(fill=BOTH, expand=1)
 
-	def change_colour(self, colour):
-		self.num_label.config(fg=colour)
+		self.x_num_blocks = 8
+		self.y_num_blocks = 8
+		self.x_steps = math.ceil(screen_width/self.x_num_blocks)
+		self.y_steps = math.ceil(screen_height/self.y_num_blocks)
+		self.block_width = self.x_steps
+		self.block_height = self.y_steps
+		self.canvas = Canvas(self)
+		for i in range(0, self.x_num_blocks):
+			for j in range(0, self.y_num_blocks):
+				corner_x = i*self.x_steps
+				corner_y = j*self.y_steps
+				self.canvas.create_rectangle(corner_x, corner_y, corner_x+self.block_width, 
+					corner_y+self.block_height, outline="black", fill="white")
 
-def start_test():
-	print "In start_test"
-	data_thread = threading.Thread(target=retrieve_headset_data, args=())
-	data_thread.start()
+		self.canvas.pack(fill=BOTH, expand=1)
 
-	# Run the actual test
-	change_num_thread = threading.Thread(target=change_num, args=())
-	change_num_thread.start()
+	def create_triangles(self):
+		num_triangles = 4
+		num_choices_x = range(0, self.x_num_blocks)
+		num_choices_y = range(0, self.y_num_blocks)
+		for i in range(0, num_triangles):
+			x = random.choice(num_choices_x)
+			y = random.choice(num_choices_y)
+			num_choices_x = range(0, x)+range(x+1, self.x_num_blocks)
+			num_choices_y = range(0, y)+range(y+1, self.y_num_blocks)
 
-def change_num():
-	global label_text
-	global root
-	global app
-	global test_can_start
-	global should_end_test
-	global control_duration
-	global item_num
-	global change_rate
-	global test_duration
-	global after_duration
-	global run_duration
-	time_counter = 0.0
-	limit = 9
+			points = [math.ceil(x*self.x_steps+self.block_width/2), y*self.y_steps, x*self.x_steps, (y+1)*self.y_steps, (x+1)*self.x_steps, (y+1)*self.y_steps]
+			self.canvas.create_polygon(points, outline="green", fill="green", width=2)
 
-	while test_can_start == False:
+	def clear_triangles(self):
+		# TODO
+		for i in range(0, self.x_num_blocks):
+			for j in range(0, self.y_num_blocks):
+				corner_x = i*self.x_steps
+				corner_y = j*self.y_steps
+				self.canvas.create_rectangle(corner_x, corner_y, corner_x+self.block_width, 
+					corner_y+self.block_height, outline="black", fill="white")
 		pass
 
-	print "Start test"
-	while time_counter < run_duration:
-		#print "Time counter"+str(time_counter)
-		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
-			num = randint(1, limit)
-			if len(test_numbers) > 0:
-				while prev_num == num:
-					num = randint(1,limit)
-			prev_num = num
-			test_numbers.append(num)
-			label_text.set(str(num))
-			app.change_colour("green")
-			root.update()
-		elif time_counter > (control_duration+test_duration):
-			app.change_colour("red")
-			label_text.set(str(item_num))
-			root.update()
-
-		time.sleep(change_rate)
-		time_counter += change_rate
-
-	should_end_test = True
-	print "End test = " + str(test_numbers)
-
 def open_application():
-	global label_text
 	global root
 	global app
 	global screen_width
@@ -586,7 +563,7 @@ def open_application():
 
 	root = Tk()
 	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
-	label_text = StringVar()
+	screen_height = screen_height-50
 	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
 	app = MainFrame(root)
 
@@ -594,6 +571,34 @@ def open_application():
 	start_test()
 
 	root.mainloop()
+
+def run_test():
+	global app
+	global should_end_test
+	global test_can_start
+	global control_duration
+	global test_duration
+	global after_duration
+
+	while test_can_start == False:
+		pass
+
+	time.sleep(control_duration)
+	app.create_triangles()
+	time.sleep(test_duration)
+	app.clear_triangles()
+	time.sleep(after_duration)
+
+	should_end_test = True
+
+def start_test():
+	print "In start_test"
+	data_thread = threading.Thread(target=retrieve_headset_data, args=())
+	data_thread.start()
+
+	# Run the actual test
+	test_thread = threading.Thread(target=run_test, args=())
+	test_thread.start()
 
 if __name__ == "__main__":
 	verify_user()
