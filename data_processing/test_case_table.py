@@ -61,9 +61,11 @@ class TestCaseTable(object):
     def is_time_part_of_correlation(self, time, correlation):
         first = correlation[0]
         second = correlation[1]
-        if time < self.time_range[first - 1]:
+        if first == 1 and time < self.time_range[0]:
             return True
-        if (second == 3 and time >= self.time_range[1]) or (second == 2 and time <= self.time_range[1]):
+        elif first == 2 and self.time_range[0] <= time < self.time_range[1]:
+            return True
+        if (second == 3 and time >= self.time_range[1]) or (second == 2 and self.time_range[0] <= time < self.time_range[1]):
             return True
         return False
 
