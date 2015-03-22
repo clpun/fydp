@@ -42,7 +42,7 @@ with open(file, 'rb') as csvfile:
 				else:
 					tuples.append(( i, 'control', row[i]))
 				i+=1
-			x = np.rec.array(tuples, dtype=[('idx', '<i4'), ('type', '|S8'), ('power', 'float')])
+			x = np.rec.array([tuples], dtype=[('idx', '<i4'), ('type', '|S8'), ('power', 'float')])
 			# print x
 			# print x.power[0:end_test]
 			# print x.power[end_test:end_control]
