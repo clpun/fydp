@@ -36,13 +36,10 @@ class TestCaseTable(object):
             self.convert_table_to_means()
 
     def update_table_for_time(self, channel_name, frequency, time, power):
-        time_group = self.is_time_part_of_correlation(time,(correlation[2], correlation[3]))
         if not self.table.has_key(channel_name):
             self.table[channel_name] = {}
         if not self.table[channel_name].has_key(frequency):
-            self.table[channel_name][frequency] = {}
-        if not self.table[channel_name][frequency].has_key(time_group):
-            self.table[channel_name][frequency][str(time_group)]
+            self.table[channel_name][frequency] = {1: [], 2: [], 3: []}
 
         if time <= self.time_range[0]:
             self.table[channel_name][frequency][1].append(power)
@@ -50,12 +47,6 @@ class TestCaseTable(object):
             self.table[channel_name][frequency][2].append(power)
         else:
             self.table[channel_name][frequency][3].append(power)
-
-    def get_mean_for(self, channel_name, channel_frequency, segment):
-        pass
-
-    def get_decision_for(self, channel_name, channel_frequency):
-        pass
 
     @staticmethod
     def index_for(header, channel_name, frequency):
@@ -68,22 +59,13 @@ class TestCaseTable(object):
         return -1
 
     def is_time_part_of_correlation(self, time, correlation):
-        index = 0
-        for i, value in enumerate(self.time_range):
-            if time < value:
-                index = i + 1
-                break
-        if index in correlation:
+        first = correlation[0]
+        second = correlation[1]
+        if time < self.time_range[first - 1]:
             return True
-        else:
-            return False
-        # first = correlation[0]
-        # second = correlation[1]
-        # if time < self.time_range[first - 1]:
-        #     return True
-        # if (second == 3 and time >= self.time_range[1]) or (second == 2 and time <= self.time_range[1]):
-        #     return True
-        # return False
+        if (second == 3 and time >= self.time_range[1]) or (second == 2 and time <= self.time_range[1]):
+            return True
+        return False
 
     def convert_table_to_means(self):
         num_segments = len(self.time_range)+1
