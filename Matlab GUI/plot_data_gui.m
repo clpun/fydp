@@ -22,7 +22,7 @@ function varargout = plot_data_gui(varargin)
 
 % Edit the above text to modify the response to help plot_data_gui
 
-% Last Modified by GUIDE v2.5 07-Mar-2015 22:29:05
+% Last Modified by GUIDE v2.5 11-Mar-2015 22:58:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,14 +76,24 @@ varargout{1} = handles.output;
 %  Main GUI
 % ----------
 
+% --- Executes on mouse press over figure background.
+function figure1_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
 % --- Executes on button press in import_data_button.
 function import_data_button_Callback(hObject, eventdata, handles)
 % hObject    handle to import_data_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+format long;
 [FileName,PathName] = uigetfile('*.csv','Select the CSV file');
 global T;
+global channel_names;
 T = readtable(FileName,'Delimiter',',');
+channel_names = {'F3','FC5','AF3','F7','T7','P7','O1','O2',...
+                 'P8','T8','F8','AF4','FC6','F4'};
 
 
 % --- Executes on button press in create_mag_time_graph_button.
@@ -91,8 +101,8 @@ function create_mag_time_graph_button_Callback(hObject, eventdata, handles)
 % hObject    handle to create_mag_time_graph_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 global T;
+global channel_names;
 % Check if csv data is imported
 if ~istable(T)
     h = warndlg('No data imported!');
@@ -101,8 +111,7 @@ else
     ah = axes('Parent',f,'Tag','axes','Position', [.15 .25 .7 .7]);
     ph = uipanel('Parent',f,'Title','Add Data','Position',[.15 .06 .7 .12]);
     pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
-                    'String',{'AF3','F7','F3','FC5','T7','P7','O1','O2',...
-                    'P8','T8','FC6','F4','F8','AF4'},...
+                    'String',channel_names,...
                     'Callback',@mt_channel_popupmenu_Callback,...
                     'Tag','mt_channel_menu',...
                     'Value',1,'Position',[100 20 130 20]);
@@ -135,6 +144,7 @@ else
     title('Magnitude-time plot');
     xlabel('time(s)');
     ylabel('magnitude');
+    %axis([T.time(1), ceil(T.time(end)), 0, ceil(max(max(T{:,:})))]);
 end
 
 % --- Executes on button press in create_time_freq_graph_button.
@@ -143,29 +153,67 @@ function create_time_freq_graph_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global T;
+global channel_names;
 % Check if csv data is imported
 if ~istable(T)
     h = warndlg('No data imported!');
 else
     f = figure('ToolBar','figure','OuterPosition',[230 250 1000 670]);
     ah = axes('Parent',f,'Tag','axes','Position', [.15 .25 .7 .7]);
-    ph = uipanel('Parent',f,'Title','Add Data','Position',[.15 .06 .7 .12]);
+    ph = uipanel('Parent',f,'Title','Plot Data','Position',[.15 .06 .7 .12]);
     pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
-                    'String',{'AF3','F7','F3','FC5','T7','P7','O1','O2',...
-                    'P8','T8','FC6','F4','F8','AF4'},...
+                    'String',channel_names,...
                     'Tag','tf_channel_menu',...
+                    'Callback',@tf_channel_menu_Callback,...
                     'Value',1,'Position',[100 20 130 20]);
-    pb1h = uicontrol('Parent',ph,'Style','pushbutton','String','Add',...
-                    'Callback',@tf_add_button_Callback,...
-                    'Position',[300 10 60 40]);
     c1h = uicontrol('Parent',ph,'Style','checkbox',...
                 'String','2D','Tag','tf_2d_cbox',...
                 'Callback',@tf_2d_cbox_Callback,...
-                'Value',0,'Position',[430 20 130 20]);
+                'Value',0,'Position',[300 20 130 20]);
     c2h = uicontrol('Parent',ph,'Style','checkbox',...
                 'String','Grayscale','Tag','tf_gray_cbox',...
                 'Callback',@tf_gray_cbox_Callback,...
-                'Value',0,'Position',[500 20 130 20]);
+                'Value',0,'Position',[400 20 130 20]);
+end
+
+% --- Executes on button press in view_fft_button.
+function view_fft_button_Callback(hObject, eventdata, handles)
+% hObject    handle to view_fft_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global T;
+global channel_names;
+% Check if csv data is imported
+if ~istable(T)
+    h = warndlg('No data imported!');
+else
+    f = figure('ToolBar','figure','OuterPosition',[230 250 1000 670]);
+    ah = axes('Parent',f,'Tag','axes','Position', [.15 .25 .7 .7]);
+    ph = uipanel('Parent',f,'Title','Menu','Position',[.15 .06 .7 .12]);
+    pm1h = uicontrol('Parent',ph,'Style','popupmenu',...
+                    'String',channel_names,...
+                    'Callback',@fft_channel_menu_Callback,...
+                    'Tag','fft_channel_menu',...
+                    'Value',1,'Position',[150 10 130 20]);
+    num_row = length(T.time);
+    step = 1/(num_row-1);
+    sh = uicontrol('Parent',ph,'Style','slider',...
+                    'Min',T.time(1),'Max',T.time(end),'Value',T.time(1),...
+                    'SliderStep',[step step*5],...
+                    'Callback',@fft_slider_Callback,...
+                    'Tag','fft_slider',...
+                    'Position',[350 10 150 20]);
+    t1h = uicontrol('Parent',ph,'Style','text',...
+                    'String','Current channel: F3',...
+                    'Tag','fft_channel_text',...
+                    'Position',[150 36 130 17]);
+    t2h = uicontrol('Parent',ph,'Style','text',...
+                    'String',['Current time: ',num2str(T.time(1)),'s'],...
+                    'Tag','fft_time_text',...
+                    'Position',[350 36 150 17]);
+    xlabel('Frequency (Hz)');
+    ylabel('Magnitude');
+    title('Fast Fourier Transform');
 end
 
 % ----------------------
@@ -174,11 +222,13 @@ end
 % --- Executes on button press in add_button.
 function mt_add_button_Callback(hObject, eventdata, handles)
 global T;
+global channel_names;
 myhandles = guihandles(hObject);
 mydata = guidata(hObject);
-channel_array = get(myhandles.mt_channel_menu, 'String');
+%channel_array = get(myhandles.mt_channel_menu, 'String');
 channel_index = get(myhandles.mt_channel_menu, 'Value');
-channel = channel_array{channel_index};
+%channel = channel_array{channel_index};
+channel = channel_names{channel_index};
 %band_array = get(myhandles.mt_band_menu, 'String');
 %band_index = get(myhandles.mt_band_menu, 'Value');
 freq_array = get(myhandles.mt_freq_menu, 'String');
@@ -230,13 +280,6 @@ for entry = strsplit(mydata.legend,',')
     end
     ma = moving_average(T{:, {variable}},20);
 	plot(T.time, ma, 'Color', rand([1,3]));
-%     for i=1:2
-%         w=10*i;
-%         ma = moving_average(T{:, {variable}},w);
-%         plot(T.time, ma, 'Color', rand([1,3]));
-%         %legend = strcat(legend,',',legend,' window=');
-%     end
-%     legend('','','','','','');
 end
 orig_legend = strsplit(mydata.legend,',')
 strlegend = strsplit(strlegend,',')
@@ -257,13 +300,12 @@ function mt_freq_popupmenu_Callback(hObject, eventdata, handles)
 %  Time-frequency graph
 % ----------------------
 
-function tf_add_button_Callback(hObject, eventdata, handles)
+function tf_channel_menu_Callback(hObject, eventdata, handles)
 global T;
+global channel_names;
 myhandles = guihandles(hObject);
-mydata = guidata(hObject);
-channel_array = get(myhandles.tf_channel_menu, 'String');
 channel_index = get(myhandles.tf_channel_menu, 'Value');
-channel = channel_array{channel_index};
+channel = channel_names{channel_index};
 dim_2 = get(myhandles.tf_2d_cbox, 'Value');
 grayscale = get(myhandles.tf_gray_cbox, 'Value');
 %create cell array of channel
@@ -285,7 +327,7 @@ title(strcat('Time-frequency plot of ',channel));
 xlabel('time(s)');
 ylabel('freq(Hz)');
 zlabel('mag');
-%TODO: check box for 2D or 3D
+
 if dim_2 == 1
 	view(2);
 end
@@ -311,4 +353,56 @@ else
     colormap(jet);
 end
 
-%function tf_channel_popupmenu_Callback(hObject, eventdata, handles)
+% ---------------------------
+%  FFT graph
+% ---------------------------
+
+function fft_channel_menu_Callback(hObject, eventdata, handles)
+global T;
+global channel_names;
+myhandles = guihandles(hObject);
+channel_index = get(myhandles.fft_channel_menu, 'Value');
+channel = channel_names{channel_index};
+cur_time = get(myhandles.fft_slider, 'Value');
+set(myhandles.fft_channel_text,'String',['Current channel: ',channel]);
+ch_offset = (channel_index-1)*64;
+%step = (T.time(end)-T.time(1))/(length(T.time)-1);
+step = 0.203125;
+if T.time(1) == 0
+    row_index = cur_time/step + 1;
+else
+    row_index = cur_time/step;
+end
+x = 0:1:63;
+y = T{round(row_index),ch_offset+2:ch_offset+65};
+plot(x,y);
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Fast Fourier Transform');
+legend([channel,' at t=',num2str(cur_time),'s']);
+
+function fft_slider_Callback(hObject, eventdata, handles)
+global T;
+global channel_names;
+myhandles = guihandles(hObject);
+channel_index = get(myhandles.fft_channel_menu, 'Value');
+channel = channel_names{channel_index};
+cur_time = get(myhandles.fft_slider, 'Value');
+set(myhandles.fft_time_text,'String',['Current time: ',num2str(cur_time)]);
+ch_offset = (channel_index-1)*64;
+%step = (T.time(end)-T.time(1))/(length(T.time)-1);
+step = 0.203125;
+if T.time(1) == 0
+    row_index = cur_time/step + 1;
+else
+    row_index = cur_time/step;
+end
+x = 0:1:63;
+y = T{round(row_index),ch_offset+2:ch_offset+65};
+plot(x,y);
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Fast Fourier Transform');
+legend([channel,' at t=',num2str(cur_time),'s']);
+%axis([0, 70, 0, ceil(max(max(T{:,:})))]);
+
