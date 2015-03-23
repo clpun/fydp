@@ -238,7 +238,7 @@ def verify_user():
             print "Invalid user id. Please use an alphanumeric id."
 
 def load_dvs():
-    mclassifier.load_decision_values(classifier_type.temporal_working_memory,'check_dv_mean.csv')
+    mclassifier.load_decision_values(classifier_type.temporal_working_memory,'check_dv_median_all_DV_accepted.csv')
 
 def clear_buffers():
     del F3Buffer[:]
