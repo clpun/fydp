@@ -72,29 +72,19 @@ for sensor in sensor_names:
     tf_alpha_beta[sensor] = 9
     tf_beta_gamma[sensor] = 31
 
-# Variables for determining if a frequency band has steady increase in F3 
-f3_delta_prev_mag = 0
-f3_delta_count = 0
-o1_alpha_prev_mag = 0
-o1_beta_prev_mag = 0
-o1_theta_prev_mag = 0
-o1_delta_prev_mag = 0
-o1_gamma_prev_mag = 0
-o2_alpha_prev_mag = 0
-o2_beta_prev_mag = 0
-o2_theta_prev_mag = 0
-o2_delta_prev_mag = 0
-o2_gamma_prev_mag = 0
-o1_alpha_count = 0
-o1_beta_count = 0
-o1_theta_count = 0
-o1_delta_count = 0
-o1_gamma_count = 0
-o2_alpha_count = 0
-o2_beta_count = 0
-o2_theta_count = 0
-o2_delta_count = 0
-o2_gamma_count = 0
+# Variables for Pattern Analysis
+import mindcraft_classifier as mclassifier
+from enum import Enum
+class classifier_type(Enum):
+    temporal_working_memory = 1
+fft_lut_tminus1 = {}    # Look Up Table
+fft_lut_t = {}
+for sensor in sensor_names:
+    fft_lut_t[sensor] = {}
+    fft_lut_tminus1[sensor] = {}
+    for ii in range(0,64):
+        fft_lut_t[sensor][str(ii)] = 0
+        fft_lut_tminus1[sensor][str(ii)] = 0
 
 # Initialize sensor pointer
 F3 = {}
@@ -247,6 +237,9 @@ def verify_user():
         else:
             print "Invalid user id. Please use an alphanumeric id."
 
+def load_dvs():
+    mclassifier.load_decision_values(classifier_type.temporal_working_memory,'check_dv_mean.csv')
+
 def clear_buffers():
     del F3Buffer[:]
     del FC5Buffer[:]
@@ -360,56 +353,17 @@ def find_mean():
     clear_buffers()
 
 def analyze_pattern():
-    global f3_delta_prev_mag
-    global f3_delta_count
-    global o1_alpha_prev_mag
-    global o1_beta_prev_mag
-    global o1_theta_prev_mag
-    global o1_delta_prev_mag
-    global o1_gamma_prev_mag
-    global o2_alpha_prev_mag
-    global o2_beta_prev_mag
-    global o2_theta_prev_mag
-    global o2_delta_prev_mag
-    global o2_gamma_prev_mag
-    global o1_alpha_count
-    global o1_beta_count
-    global o1_theta_count
-    global o1_delta_count
-    global o1_gamma_count
-    global o2_alpha_count
-    global o2_beta_count
-    global o2_theta_count
-    global o2_delta_count
-    global o2_gamma_count
     global _gyroX
     global _gyroY
+    global fft_lut_tminus1
+    global fft_lut_t
 
-    if(gamma_sum_mag['O1'] > o1_gamma_prev_mag):
-        #print "O1 gamma increase; mag = {0}".format(gamma_sum_mag['O1'])
-        o1_gamma_count += 1
-    else:
-        o1_gamma_count = 0
-    if(gamma_sum_mag['O2'] > o2_gamma_prev_mag):
-        #print "O2 gamma increase; mag = {0}".format(gamma_sum_mag['O2'])
-        o2_gamma_count += 1
-    else:
-        o2_gamma_count = 0
-
-    if o1_gamma_count >= 3:
-        #print "**O1 gamma increase; mag = {0}, ({1})".format(gamma_sum_mag['O1'],gamma_sum_mag['O1'] - o1_gamma_prev_mag)
-        pass
-    if o2_gamma_count >= 3:
-        #print "**O2 gamma increase; mag = {0}, ({1})".format(gamma_sum_mag['O2'],gamma_sum_mag['O2'] - o2_gamma_prev_mag)
-        pass
-
-    #print "O1 gamma: mag = {0}, ({1})\nO2 gamma: mag = {2}, ({3})".format(int(gamma_sum_mag['O1']),int(gamma_sum_mag['O1'] - o1_gamma_prev_mag),int(gamma_sum_mag['O2']),int(gamma_sum_mag['O2'] - o2_gamma_prev_mag))
-
-    o1_gamma_prev_mag = gamma_sum_mag['O1']
-    o2_gamma_prev_mag = gamma_sum_mag['O2']
+    tmw_control = mclassifier.twm_classifier(fft_lut_tminus1,fft_lut_t)
+    if tmw_control:
+        print "tmw control!"
     # print "Battery = " + str(battery)
-    if float(battery) < 5:
-        print "Need to recharge battery: " + str(battery)
+    # if float(battery) < 5:
+    #     print "Need to recharge battery: " + str(battery)
     #print "Change of gyroX = " + str(_gyroX - gyroX)
     #print "Change of gyroY = " + str(_gyroY - gyroY)
     _gyroX = gyroX
@@ -418,24 +372,8 @@ def analyze_pattern():
 
 def main():
     global headset
-    global gyroX
-    global gyroY
-    global battery
-
-    F3 = {}
-    FC5 = {}
-    AF3 = {}
-    F7 = {}
-    T7 = {}
-    P7 = {}
-    O1 = {}
-    O2 = {}
-    P8 = {}
-    T8 = {}
-    F8 = {}
-    AF4 = {}
-    FC6 = {}
-    F4 = {}
+    global fft_lut_tminus1
+    global fft_lut_t
 
     headset = emotiv.Emotiv()
     gevent.spawn(headset.setup)
@@ -443,255 +381,70 @@ def main():
 
     try:
         sample_counter = 0
-
-        print '~~~~~~~~~~~'
+        headset.packets.queue.clear()
         while True:
-            # Retrieve emotiv packet
-            packet = headset.dequeue()
-
-            battery = packet.battery
-            gyroX = packet.sensors['X']['value']
-            gyroY = packet.sensors['Y']['value']
-            # Get sensor data
-            #F3 = packet.sensors['F3']['value']
-            #FC5 = packet.sensors['FC5']['value']
-            #AF3 = packet.sensors['AF3']['value']
-            #F7 = packet.sensors['F7']['value']
-            #T7 = packet.sensors['T7']['value']
-            #P7 = packet.sensors['P7']['value']
-            #O1 = packet.sensors['O1']['value']
-            #O2 = packet.sensors['O2']['value']
-            #P8 = packet.sensors['P8']['value']
-            #T8 = packet.sensors['T8']['value']
-            #F8 = packet.sensors['F8']['value']
-            #AF4 = packet.sensors['AF4']['value']
-            #FC6 = packet.sensors['FC6']['value']
-            #F4 = packet.sensors['F4']['value']
-
-            F3 = packet.sensors['F3']
-            FC5 = packet.sensors['FC5']
-            AF3 = packet.sensors['AF3']
-            F7 = packet.sensors['F7']
-            T7 = packet.sensors['T7']
-            P7 = packet.sensors['P7']
-            O1 = packet.sensors['O1']
-            O2 = packet.sensors['O2']
-            P8 = packet.sensors['P8']
-            T8 = packet.sensors['T8']
-            F8 = packet.sensors['F8']
-            AF4 = packet.sensors['AF4']
-            FC6 = packet.sensors['FC6']
-            F4 = packet.sensors['F4']
-
-            # Build buffers for FFT
-            F3Buffer.append(F3['value'])
-            FC5Buffer.append(FC5['value'])
-            AF3Buffer.append(AF3['value'])
-            F7Buffer.append(F7['value'])
-            T7Buffer.append(T7['value'])
-            P7Buffer.append(P7['value'])
-            O1Buffer.append(O1['value'])
-            O2Buffer.append(O2['value'])
-            P8Buffer.append(P8['value'])
-            T8Buffer.append(T8['value'])
-            F8Buffer.append(F8['value'])
-            AF4Buffer.append(AF4['value'])
-            FC6Buffer.append(FC6['value'])
-            F4Buffer.append(F4['value'])
-
+            dequeue_headset()
             sample_counter = sample_counter + 1
 
             # Do FFT for each sensor after collecting 32 samples
             if sample_counter > fftSamplingNum:
+                for sensor in sensor_names:
+                    # fft_lut_tminus1[sensor] = {}
+                    for ii in range(0,len(fft_lut_t[sensor])-1):
+                        #print str(fft_lut_tminus1[sensor])
+                        fft_lut_tminus1[sensor][str(ii)] = fft_lut_t[sensor][str(ii)]
+                    # fft_lut_t[sensor] = {}
+                # print "pass = " + str(len(fft_lut_t[sensor])-1)
                 # Remove high frequency noise and dc offset
-                F3Buffer_clean = sp.preprocess(F3Buffer, f3_mean)
-                FC5Buffer_clean = sp.preprocess(FC5Buffer, fc5_mean)
-                AF3Buffer_clean = sp.preprocess(AF3Buffer, af3_mean)
-                F7Buffer_clean = sp.preprocess(F7Buffer, f7_mean)
-                T7Buffer_clean = sp.preprocess(T7Buffer, t7_mean)
-                P7Buffer_clean = sp.preprocess(P7Buffer, p7_mean)
-                O1Buffer_clean = sp.preprocess(O1Buffer, o1_mean)
-                O2Buffer_clean = sp.preprocess(O2Buffer, o2_mean)
-                P8Buffer_clean = sp.preprocess(P8Buffer, p8_mean)
-                T8Buffer_clean = sp.preprocess(T8Buffer, t8_mean)
-                F8Buffer_clean = sp.preprocess(F8Buffer, f8_mean)
-                AF4Buffer_clean = sp.preprocess(AF4Buffer, af4_mean)
-                FC6Buffer_clean = sp.preprocess(FC6Buffer, fc6_mean)
-                F4Buffer_clean = sp.preprocess(F4Buffer, f4_mean)
-
                 # Apply DFT to extract frequency components
-                f3_fft = fft.compute_fft(F3Buffer_clean)
-                fc5_fft = fft.compute_fft(FC5Buffer_clean)
-                af3_fft = fft.compute_fft(AF3Buffer_clean)
-                f7_fft = fft.compute_fft(F7Buffer_clean)
-                t7_fft = fft.compute_fft(T7Buffer_clean)
-                p7_fft = fft.compute_fft(P7Buffer_clean)
-                o1_fft = fft.compute_fft(O1Buffer_clean)
-                o2_fft = fft.compute_fft(O2Buffer_clean)
-                p8_fft = fft.compute_fft(P8Buffer_clean)
-                t8_fft = fft.compute_fft(T8Buffer_clean)
-                f8_fft = fft.compute_fft(F8Buffer_clean)
-                af4_fft = fft.compute_fft(AF4Buffer_clean)
-                fc6_fft = fft.compute_fft(FC6Buffer_clean)
-                f4_fft = fft.compute_fft(F4Buffer_clean)
+                f3_fft = fft.compute_fft(sp.preprocess(F3Buffer, f3_mean))
+                fc5_fft = fft.compute_fft(sp.preprocess(FC5Buffer, fc5_mean))
+                af3_fft = fft.compute_fft(sp.preprocess(AF3Buffer, af3_mean))
+                f7_fft = fft.compute_fft(sp.preprocess(F7Buffer, f7_mean))
+                t7_fft = fft.compute_fft(sp.preprocess(T7Buffer, t7_mean))
+                p7_fft = fft.compute_fft(sp.preprocess(P7Buffer, p7_mean))
+                o1_fft = fft.compute_fft(sp.preprocess(O1Buffer, o1_mean))
+                o2_fft = fft.compute_fft(sp.preprocess(O2Buffer, o2_mean))
+                p8_fft = fft.compute_fft(sp.preprocess(P8Buffer, p8_mean))
+                t8_fft = fft.compute_fft(sp.preprocess(T8Buffer, t8_mean))
+                f8_fft = fft.compute_fft(sp.preprocess(F8Buffer, f8_mean))
+                af4_fft = fft.compute_fft(sp.preprocess(AF4Buffer, af4_mean))
+                fc6_fft = fft.compute_fft(sp.preprocess(FC6Buffer, fc6_mean))
+                f4_fft = fft.compute_fft(sp.preprocess(F4Buffer, f4_mean))
 
-                # Build dictionary
-                '''fft_dict = {
-                    'F3': f3_fft,
-                    'FC5': fc5_fft,
-                    'AF3': af3_fft,
-                    'F7': f7_fft,
-                    'T7': t7_fft,
-                    'P7': p7_fft,
-                    'O1': o1_fft,
-                    'O2': o2_fft,
-                    'P8': p8_fft,
-                    'T8': t8_fft,
-                    'F8': f8_fft,
-                    'AF4': af4_fft,
-                    'FC6': fc6_fft,
-                    'F4': f4_fft
-                }'''
+                for sensor in sensor_names:
+                    if sensor == 'F3':
+                        fft_comp = f3_fft
+                    elif sensor == 'FC5':
+                        fft_comp = fc5_fft
+                    elif sensor == 'AF3':
+                        fft_comp = af3_fft
+                    elif sensor == 'F7':
+                        fft_comp = f7_fft
+                    elif sensor == 'T7':
+                        fft_comp = t7_fft
+                    elif sensor == 'P7':
+                        fft_comp = p7_fft
+                    elif sensor == 'O1':
+                        fft_comp = o1_fft
+                    elif sensor == 'O2':
+                        fft_comp = o2_fft
+                    elif sensor == 'P8':
+                        fft_comp = p8_fft
+                    elif sensor == 'T8':
+                        fft_comp = t8_fft
+                    elif sensor == 'F8':
+                        fft_comp = f8_fft
+                    elif sensor == 'AF4':
+                        fft_comp = af4_fft
+                    elif sensor == 'FC6':
+                        fft_comp = fc6_fft
+                    elif sensor == 'F4':
+                        fft_comp = f4_fft
+                    for ii in range(0,len(fft_comp)-1):
+                        fft_lut_t[sensor][str(ii)] = fft_comp[ii]
 
-                # Calculate the magnitude sum of the 5 frequency bands.
-                # Delta = 1-3 Hz [0:tf_delta_theta]
-                # Theta = 4-7 Hz [tf_delta_theta+1:tf_theta_alpha]
-                # Alpha = 8-15 Hz [tf_theta_alpha+1:tf_alpha_beta]
-                # Beta = 16-31 Hz [tf_alpha_beta+1:tf_beta_gamma]
-                # Gamma = 32-64 Hz [32:-1]
-                delta_sum_mag['F3'] = sum(f3_fft[0:tf_delta_theta])
-                delta_sum_mag['FC5'] = sum(fc5_fft[0:tf_delta_theta])
-                delta_sum_mag['AF3'] = sum(af3_fft[0:tf_delta_theta])
-                delta_sum_mag['F7'] = sum(f7_fft[0:tf_delta_theta])
-                delta_sum_mag['T7'] = sum(t7_fft[0:tf_delta_theta])
-                delta_sum_mag['P7'] = sum(p7_fft[0:tf_delta_theta])
-                delta_sum_mag['O1'] = sum(o1_fft[0:tf_delta_theta])
-                delta_sum_mag['O2'] = sum(o2_fft[0:tf_delta_theta])
-                delta_sum_mag['P8'] = sum(p8_fft[0:tf_delta_theta])
-                delta_sum_mag['T8'] = sum(t8_fft[0:tf_delta_theta])
-                delta_sum_mag['F8'] = sum(f8_fft[0:tf_delta_theta])
-                delta_sum_mag['AF4'] = sum(af4_fft[0:tf_delta_theta])
-                delta_sum_mag['FC6'] = sum(fc6_fft[0:tf_delta_theta])
-                delta_sum_mag['F4'] = sum(f4_fft[0:tf_delta_theta])
-
-                theta_sum_mag['F3'] = sum(f3_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['FC5'] = sum(fc5_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['AF3'] = sum(af3_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['F7'] = sum(f7_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['T7'] = sum(t7_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['P7'] = sum(p7_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['O1'] = sum(o1_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['O2'] = sum(o2_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['P8'] = sum(p8_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['T8'] = sum(t8_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['F8'] = sum(f8_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['AF4'] = sum(af4_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['FC6'] = sum(fc6_fft[tf_delta_theta+1:tf_theta_alpha])
-                theta_sum_mag['F4'] = sum(f4_fft[tf_delta_theta+1:tf_theta_alpha])
-
-                alpha_sum_mag['F3'] = sum(f3_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['FC5'] = sum(fc5_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['AF3'] = sum(af3_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['F7'] = sum(f7_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['T7'] = sum(t7_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['P7'] = sum(p7_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['O1'] = sum(o1_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['O2'] = sum(o2_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['P8'] = sum(p8_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['T8'] = sum(t8_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['F8'] = sum(f8_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['AF4'] = sum(af4_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['FC6'] = sum(fc6_fft[tf_theta_alpha+1:tf_alpha_beta])
-                alpha_sum_mag['F4'] = sum(f4_fft[tf_theta_alpha+1:tf_alpha_beta])
-
-                beta_sum_mag['F3'] = sum(f3_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['FC5'] = sum(fc5_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['AF3'] = sum(af3_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['F7'] = sum(f7_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['T7'] = sum(t7_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['P7'] = sum(p7_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['O1'] = sum(o1_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['O2'] = sum(o2_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['P8'] = sum(p8_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['T8'] = sum(t8_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['F8'] = sum(f8_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['AF4'] = sum(af4_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['FC6'] = sum(fc6_fft[tf_alpha_beta+1:tf_beta_gamma])
-                beta_sum_mag['F4'] = sum(f4_fft[tf_alpha_beta+1:tf_beta_gamma])
-
-                gamma_sum_mag['F3'] = sum(f3_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['FC5'] = sum(fc5_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['AF3'] = sum(af3_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['F7'] = sum(f7_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['T7'] = sum(t7_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['P7'] = sum(p7_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['O1'] = sum(o1_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['O2'] = sum(o2_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['P8'] = sum(p8_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['T8'] = sum(t8_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['F8'] = sum(f8_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['AF4'] = sum(af4_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['FC6'] = sum(fc6_fft[tf_beta_gamma+1:])
-                gamma_sum_mag['F4'] = sum(f4_fft[tf_beta_gamma+1:])
-
-                '''
-                print "Delta Magnitude Sum:"
-                for key in delta_sum_mag.keys():
-                    print key, ":", delta_sum_mag[key]
-                print ""
-
-                print "Alpha Magnitude Sum:"
-                for key in alpha_sum_mag.keys():
-                    print key, ":", alpha_sum_mag[key]
-                print ""
-
-                print "Beta Magnitude Sum:"
-                for key in beta_sum_mag.keys():
-                    print key, ":", beta_sum_mag[key]
-                print ""
-
-                print "Gamma Magnitude Sum:"
-                for key in gamma_sum_mag.keys():
-                    print key, ":", gamma_sum_mag[key]
-                print ""
-                '''
-
-                # Determine if a freq band of a channel has a steady increase in magnitude over 3 ffts
-                power_dict = {}
-                for band in band_types:
-                    power_dict[band] = {}
-                    for sensor in sensor_names:
-                        if band == "delta" :
-                            power_dict[band][sensor] = delta_sum_mag[sensor]
-                        elif band == "theta":
-                            power_dict[band][sensor] = theta_sum_mag[sensor]
-                        elif band == "alpha":
-                            power_dict[band][sensor] = alpha_sum_mag[sensor]
-                        elif band == "beta":
-                            power_dict[band][sensor] = beta_sum_mag[sensor]
-                        elif band == "gamma":
-                            power_dict[band][sensor] = gamma_sum_mag[sensor]
-
-                power_dict['quality'] = {}
-                power_dict['quality']['F3'] = F3['quality']
-                power_dict['quality']['FC5'] = FC5['quality']
-                power_dict['quality']['AF3'] = AF3['quality']
-                power_dict['quality']['F7'] = F7['quality']
-                power_dict['quality']['T7'] = T7['quality']
-                power_dict['quality']['P7'] = P7['quality']
-                power_dict['quality']['O1'] = O1['quality']
-                power_dict['quality']['O2'] = O2['quality']
-                power_dict['quality']['P8'] = P8['quality']
-                power_dict['quality']['T8'] = T8['quality']
-                power_dict['quality']['F8'] = F8['quality']
-                power_dict['quality']['AF4'] = AF4['quality']
-                power_dict['quality']['FC6'] = FC6['quality']
-                power_dict['quality']['F4'] = F4['quality']
-
-                print "printing time for every emit = "+str(time.time())
                 analyze_pattern()
-                yield power_dict
-
                 # Clear buffers
                 clear_buffers()
                 sample_counter = 0
@@ -836,6 +589,7 @@ def get_individual_frequency_power():
     gevent.sleep(1)
     try:
         sample_counter = 0
+        headset.packets.queue.clear()
         while True:
             dequeue_headset()
             sample_counter = sample_counter + 1
@@ -937,7 +691,6 @@ def get_individual_frequency_power():
                 power_dict['quality']['FC6'] = FC6['quality']
                 power_dict['quality']['F4'] = F4['quality']
 
-                analyze_pattern()
                 #print "printing time for every emit = "+str(time.time())
                 yield power_dict
 
@@ -1010,4 +763,6 @@ def dequeue_headset():
     F4Buffer.append(F4['value'])
 
 if __name__ == "__main__":
+    verify_user()
+    load_dvs()
     main()
