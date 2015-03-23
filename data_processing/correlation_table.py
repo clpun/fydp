@@ -5,11 +5,11 @@ import numpy
 class CorrelationTable(object):
     def __init__(self, filename):
         self.filename = filename
-        self.table = None
+        self.table = {}
         self.parse_data()
 
     def parse_data(self):
-        with open(self.filename, 'rb') as csv_file:
+        with open(self.filename, 'rU') as csv_file:
             data_reader = reader(csv_file)
             parsed_rows = []
             first_row = True

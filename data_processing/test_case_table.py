@@ -12,7 +12,7 @@ class TestCaseTable(object):
         self.parse_data()
 
     def parse_data(self):
-        with open(self.filename, 'rb') as csv_file:
+        with open(self.filename, 'rU') as csv_file:
             data_reader = reader(csv_file)
             first_row = True
             header = None
@@ -74,5 +74,5 @@ class TestCaseTable(object):
         for channel_name in self.table:
             for channel_frequency in self.table[channel_name]:
                 for segment in range(1, num_segments+1):
-                    self.table[channel_name][channel_frequency][segment] = \
-                        numpy.mean(self.table[channel_name][channel_frequency][segment])
+                    if len(self.table[channel_name][channel_frequency][segment]) > 0:
+                        self.table[channel_name][channel_frequency][segment] = numpy.mean(self.table[channel_name][channel_frequency][segment])
