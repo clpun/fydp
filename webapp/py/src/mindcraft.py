@@ -77,14 +77,13 @@ import mindcraft_classifier as mclassifier
 from enum import Enum
 class classifier_type(Enum):
     temporal_working_memory = 1
-fft_lut_tminus1 = {}    # Look Up Table
-fft_lut_t = {}
+fft_lut_t = {}      # Look Up Table
+fft_lut_circbuffersize = 8
+fft_lut_circbufferindex = fft_lut_circbuffersize - 1
 for sensor in sensor_names:
-    fft_lut_t[sensor] = {}
-    fft_lut_tminus1[sensor] = {}
+    fft_lut_t[sensor] = np.empty(63,dtype='<i4')
     for ii in range(0,64):
-        fft_lut_t[sensor][str(ii)] = 0
-        fft_lut_tminus1[sensor][str(ii)] = 0
+        fft_lut_t[sensor][ii] = np.empty(fft_lut_circbuffersize,dtype='<f8')
 
 # Initialize sensor pointer
 F3 = {}
@@ -238,7 +237,7 @@ def verify_user():
             print "Invalid user id. Please use an alphanumeric id."
 
 def load_dvs():
-    mclassifier.load_decision_values(classifier_type.temporal_working_memory,'check_dv_median_all_DV_accepted.csv')
+    mclassifier.load_mean_decision_values(classifier_type.temporal_working_memory,'check_dv_median_all_DV_accepted.csv')
 
 def clear_buffers():
     del F3Buffer[:]
@@ -355,10 +354,9 @@ def find_mean():
 def analyze_pattern():
     global _gyroX
     global _gyroY
-    global fft_lut_tminus1
     global fft_lut_t
 
-    tmw_control = mclassifier.twm_classifier(fft_lut_tminus1,fft_lut_t)
+    tmw_control = mclassifier.twm_mean_classifier(fft_lut_t,fft_lut_circbufferindex)
     if tmw_control:
         print "tmw control!"
     # print "Battery = " + str(battery)
@@ -372,7 +370,6 @@ def analyze_pattern():
 
 def main():
     global headset
-    global fft_lut_tminus1
     global fft_lut_t
 
     headset = emotiv.Emotiv()
@@ -388,12 +385,6 @@ def main():
 
             # Do FFT for each sensor after collecting 32 samples
             if sample_counter > fftSamplingNum:
-                for sensor in sensor_names:
-                    # fft_lut_tminus1[sensor] = {}
-                    for ii in range(0,len(fft_lut_t[sensor])-1):
-                        #print str(fft_lut_tminus1[sensor])
-                        fft_lut_tminus1[sensor][str(ii)] = fft_lut_t[sensor][str(ii)]
-                    # fft_lut_t[sensor] = {}
                 # print "pass = " + str(len(fft_lut_t[sensor])-1)
                 # Remove high frequency noise and dc offset
                 # Apply DFT to extract frequency components
@@ -442,7 +433,8 @@ def main():
                     elif sensor == 'F4':
                         fft_comp = f4_fft
                     for ii in range(0,len(fft_comp)-1):
-                        fft_lut_t[sensor][str(ii)] = fft_comp[ii]
+                        update_fft_lut_circbufferindex()
+                        fft_lut_t[sensor][ii][fft_lut_circbufferindex] = fft_comp[ii]
 
                 analyze_pattern()
                 # Clear buffers
@@ -581,6 +573,12 @@ def calculate_transition_frequencies():
         headset.close()
     finally:
         headset.close()
+
+def update_fft_lut_circbufferindex():
+    global fft_lut_circbufferindex
+    fft_lut_circbufferindex += 1
+    if fft_lut_circbufferindex == fft_lut_circbuffersize:
+        fft_lut_circbufferindex = 0
 
 def get_individual_frequency_power():
     global headset
