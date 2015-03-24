@@ -81,7 +81,7 @@ fft_lut_t = {}      # Look Up Table
 fft_lut_circbuffersize = 8
 fft_lut_circbufferindex = fft_lut_circbuffersize - 1
 for sensor in sensor_names:
-    fft_lut_t[sensor] = np.empty(63,dtype='<i4')
+    fft_lut_t[sensor] = [None]*64
     for ii in range(0,64):
         fft_lut_t[sensor][ii] = np.empty(fft_lut_circbuffersize,dtype='<f8')
 
