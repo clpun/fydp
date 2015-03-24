@@ -28,8 +28,12 @@ should_end_test = False
 control_duration = 5.0
 test_duration = 0.5
 after_duration = 5.0
-run_duration = control_duration+test_duration+after_duration
+num_tests = 2
+run_duration = control_duration+num_tests*test_duration+after_duration
 index_limit = math.ceil(run_duration/oneFftPeriod)
+prev_pattern = {}
+num_same_location = 0
+turn = 1
 
 class UserPreference:
 	user_name = "User"
@@ -533,20 +537,40 @@ class MainFrame(Frame):
 		self.canvas.pack(fill=BOTH, expand=1)
 
 	def create_triangles(self):
+		global prev_pattern
+		global turn
+		global num_same_location
+
 		num_triangles = 4
 		num_choices_x = range(0, self.x_num_blocks)
 		num_choices_y = range(0, self.y_num_blocks)
-		for i in range(0, num_triangles):
+
+		i = 0
+		while i < num_triangles:
+		#for i in range(0, num_triangles):
 			x = random.choice(num_choices_x)
 			y = random.choice(num_choices_y)
 			num_choices_x = range(0, x)+range(x+1, self.x_num_blocks)
 			num_choices_y = range(0, y)+range(y+1, self.y_num_blocks)
+			if turn == 1:
+				prev_pattern[i] = {'x':x, 'y':y}
+			else:
+				for j in range(0, num_triangles):
+					if x == prev_pattern[j]['x'] and y == prev_pattern[j]['y']:
+						num_same_location += 1
+						print "Same location"
+						break
+
+				if num_same_location > num_triangles-1:
+					continue
 
 			points = [math.ceil(x*self.x_steps+self.block_width/2), y*self.y_steps, x*self.x_steps, (y+1)*self.y_steps, (x+1)*self.x_steps, (y+1)*self.y_steps]
 			self.canvas.create_polygon(points, outline="green", fill="green", width=2)
+			i = i+1
+
+		turn += 1
 
 	def clear_triangles(self):
-		# TODO
 		for i in range(0, self.x_num_blocks):
 			for j in range(0, self.y_num_blocks):
 				corner_x = i*self.x_steps
@@ -584,8 +608,15 @@ def run_test():
 		pass
 
 	time.sleep(control_duration)
+
+	app.create_triangles()
+	print prev_pattern
+	time.sleep(test_duration)
+
+	app.clear_triangles()
 	app.create_triangles()
 	time.sleep(test_duration)
+
 	app.clear_triangles()
 	time.sleep(after_duration)
 
