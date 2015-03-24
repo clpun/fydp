@@ -6,33 +6,33 @@ import signal_preprocessing as sp
 import gevent
 import fft
 import threading
+import pygame
 
 from random import randint
 from ..lib import emotiv
-from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
+from PIL import Image, ImageTk
+from Tkinter import Tk, Frame, Label, BOTH
+
+
+control_duration = 3.0
+test_duration = 5.0
+after_duration = 3.0
+total_duration = 5*(control_duration+test_duration+after_duration)
 
 sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
 data = {}
 samplingFreq = 128.0
 fftSamplingNum = 26.0
 oneFftPeriod = fftSamplingNum/samplingFreq
+testcase = "800"
+testdescrip = "random_sound_test"
+index = 0
+index_limit = math.ceil(total_duration/oneFftPeriod)
+test_can_start = False
 
 app = None
-control_duration = 5.0
-change_rate = 0.5
-item_num = 7
-test_duration = change_rate*item_num
-after_duration = 5.0
-run_duration = control_duration+test_duration+after_duration 
-testcase = "630"
-testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
-test_numbers = []
-index = 0
-index_limit = math.ceil(run_duration/oneFftPeriod)
-test_can_start = False
 screen_width = 0
 screen_height = 0
-should_end_test = False
 
 class UserPreference:
 	user_name = "User"
@@ -82,7 +82,6 @@ def retrieve_headset_data():
 	global battery
 	global index
 	global test_can_start
-	global should_end_test
 
 	F3 = {}
 	FC5 = {}
@@ -107,7 +106,6 @@ def retrieve_headset_data():
 		sample_counter = 0
 		test_can_start = True
 		headset.packets.queue.clear()
-		#while should_end_test == False:
 		while index <= index_limit:
 			# Retrieve emotiv packet
 			packet = headset.dequeue()
@@ -238,7 +236,7 @@ def retrieve_headset_data():
 def write_ind_comp(csvDataBuffer):
 	global root
 
-	#print "Writing data to csv file"
+	print "Writing data to csv file"
 	csv_data = "time,"
 	for channel in sensor_names:
 		for ii in range(0,len(csvDataBuffer[0][channel])-1):
@@ -253,7 +251,7 @@ def write_ind_comp(csvDataBuffer):
 	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
-	#print "Done"
+	print "Done"
 	root.destroy()
 
 	return
@@ -498,7 +496,8 @@ def clear_buffers():
 	del F4Buffer[:]
 
 class MainFrame(Frame):
-	num_label = None
+	image_label = None
+	image = None
 
 	def __init__(self, parent):
 		Frame.__init__(self, parent, background="white")
@@ -506,103 +505,75 @@ class MainFrame(Frame):
 		self.init_UI()
 
 	def init_UI(self):
-		global label_text
-		global screen_width
-		global screen_height
-		global item_num
-
-		self.parent.title("Temporal Working Memory Test")
-
-		#start_button = Button(self, text="Start", command=start_button_callback)
-		#start_button.place(x=0, y=0)
-
-		label_text.set(str(item_num))
-		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
-		self.num_label.place(x=math.ceil(screen_width/2-40), y=math.ceil(screen_height/2-160))
-
+		self.parent.title("Random Sound Test")
 		self.pack(fill=BOTH, expand=1)
 
-	def change_colour(self, colour):
-		self.num_label.config(fg=colour)
+	def show_image(self, filename):
+		if self.image == None:
+			self.image = ImageTk.PhotoImage(Image.open(filename))
+		if self.image_label == None:
+			self.image_label = Label(self, image=self.image, bg="white")
+			self.image_label.image = self.image
 
-def start_test():
-	print "In start_test"
-	data_thread = threading.Thread(target=retrieve_headset_data, args=())
-	data_thread.start()
+		self.image_label.place(x=math.ceil(screen_width/2-320), y=math.ceil(screen_height/2-300))
 
-	# Run the actual test
-	change_num_thread = threading.Thread(target=change_num, args=())
-	change_num_thread.start()
+	def clear_screen(self):
+		self.image_label.place_forget()
 
-def change_num():
-	global label_text
-	global root
-	global app
-	global test_can_start
-	global should_end_test
+def run_test():
 	global control_duration
-	global item_num
-	global change_rate
 	global test_duration
 	global after_duration
-	global run_duration
-	time_counter = 0.0
-	limit = 9
-	n = 0
+	global total_duration
+	global screen_width
+	global screen_height
+
+	pygame.init()
+	sound = pygame.mixer.Sound('sound.wav')
+	channel = pygame.mixer.Channel(0)
+	test_index = 0
+
+	slient_case = randint(0,4)
 
 	while test_can_start == False:
 		pass
 
-	print "Start test"
-	while time_counter < run_duration:
-		#print "Time counter"+str(time_counter)
-		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
-			label_text.set(str(test_numbers[n]))
-			app.change_colour("green")
-			root.update()
-			n += 1
-		elif time_counter > (control_duration+test_duration):
-			app.change_colour("red")
-			label_text.set(str(item_num))
-			root.update()
+	while test_index < 5:
+		time.sleep(control_duration)
 
-		time.sleep(change_rate)
-		time_counter += change_rate
+		if slient_case != test_index:
+			# Play sound
+			channel.play(sound)
+		# Display image on screen
+		app.show_image("music-note.png")
+		time.sleep(test_duration)
 
-	should_end_test = True
-	print "End test = " + str(test_numbers)
+		# Stop playing sound
+		channel.stop()
+		# Clear screen
+		app.clear_screen()
+		time.sleep(after_duration)
 
-def generate_nums():
-	global item_num
-	limit = 9
-
-	# Generate a set of random numbers to be displayed. 
-	for i in range(0, item_num):
-		num = randint(1, limit)
-		if len(test_numbers) > 0:
-			while prev_num == num:
-				num = randint(1, limit)
-		prev_num = num
-		test_numbers.append(num)
+		test_index += 1
 
 def open_application():
-	global label_text
-	global root
 	global app
+	global root
 	global screen_width
 	global screen_height
 
 	root = Tk()
 	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
-	label_text = StringVar()
 	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
 	app = MainFrame(root)
-	
-	generate_nums()
-	start_test()
+
+	data_thread = threading.Thread(target=retrieve_headset_data, args=())
+	data_thread.start()
+
+	test_thread = threading.Thread(target=run_test, args=())
+	test_thread.start()
 
 	root.mainloop()
 
 if __name__ == "__main__":
-	verify_user()
 	open_application()

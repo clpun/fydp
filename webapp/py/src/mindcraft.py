@@ -117,6 +117,22 @@ AF4Buffer = []
 FC6Buffer = []
 F4Buffer = []
 
+# Initialize mean
+f3_mean = 0.0
+fc5_mean = 0.0
+af3_mean = 0.0
+f7_mean = 0.0
+t7_mean = 0.0
+p7_mean = 0.0
+o1_mean = 0.0
+o2_mean = 0.0
+p8_mean = 0.0
+t8_mean = 0.0
+f8_mean = 0.0
+af4_mean = 0.0
+fc6_mean = 0.0
+f4_mean = 0.0
+
 def verify_user():
     global user_preference
     global headset
