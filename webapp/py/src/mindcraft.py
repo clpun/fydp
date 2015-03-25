@@ -254,6 +254,7 @@ def verify_user():
 
 def load_dvs():
     mclassifier.load_mean_decision_values(classifier_type.temporal_working_memory,'check_dv_median_all_DV_accepted.csv')
+    mclassifier.load_minmax_decision_values(classifier_type.temporal_working_memory,'research_check_dv_median.csv')
 
 def clear_buffers():
     del F3Buffer[:]
@@ -419,6 +420,7 @@ def main():
                 fc6_fft = fft.compute_fft(sp.preprocess(FC6Buffer, fc6_mean))
                 f4_fft = fft.compute_fft(sp.preprocess(F4Buffer, f4_mean))
 
+                update_fft_lut_circbufferindex()
                 for sensor in sensor_names:
                     if sensor == 'F3':
                         fft_comp = f3_fft
@@ -449,7 +451,6 @@ def main():
                     elif sensor == 'F4':
                         fft_comp = f4_fft
                     for ii in range(0,len(fft_comp)-1):
-                        update_fft_lut_circbufferindex()
                         fft_lut_t[sensor][ii][fft_lut_circbufferindex] = fft_comp[ii]
 
                 analyze_pattern()

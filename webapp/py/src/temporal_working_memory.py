@@ -6,6 +6,8 @@ import signal_preprocessing as sp
 import gevent
 import fft
 import threading
+import mindcraft_classifier as mclassifier
+import numpy as np
 
 from random import randint
 from ..lib import emotiv
@@ -16,6 +18,20 @@ data = {}
 samplingFreq = 128.0
 fftSamplingNum = 26.0
 oneFftPeriod = fftSamplingNum/samplingFreq
+classifier_thread = None
+
+from enum import Enum
+class classifier_type(Enum):
+	temporal_working_memory = 1
+fft_lut_t = {}	  # Look Up Table
+fft_lut_circbuffersize = 50
+fft_lut_circbufferindex = fft_lut_circbuffersize - 1
+for sensor in sensor_names:
+	fft_lut_t[sensor] = {}
+	for jj in range(0, 64):
+		fft_lut_t[sensor][jj] = ([int(0)]*fft_lut_circbuffersize)
+	# for ii in range(0,64):
+	# 	fft_lut_t[sensor][ii] = np.empty(fft_lut_circbuffersize,dtype='<f8')
 
 app = None
 control_duration = 5.0
@@ -24,7 +40,7 @@ item_num = 7
 test_duration = change_rate*item_num
 after_duration = 5.0
 run_duration = control_duration+test_duration+after_duration 
-testcase = "630"
+testcase = "646"
 testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
 test_numbers = []
 index = 0
@@ -83,6 +99,7 @@ def retrieve_headset_data():
 	global index
 	global test_can_start
 	global should_end_test
+	global fft_lut_t
 
 	F3 = {}
 	FC5 = {}
@@ -192,6 +209,7 @@ def retrieve_headset_data():
 				# theta_avg = {}
 				# alpha_avg = {}
 				data[index] = {}
+				update_fft_lut_circbufferindex()
 				for sensor in sensor_names:
 					if sensor == 'F3':
 						fft_comp = f3_fft
@@ -221,7 +239,9 @@ def retrieve_headset_data():
 						fft_comp = fc6_fft
 					elif sensor == 'F4':
 						fft_comp = f4_fft
-
+					for ii in range(0,len(fft_comp)-1):
+						fft_lut_t[sensor][ii][fft_lut_circbufferindex] = fft_comp[ii]
+						#fft_lut_t[sensor][ii][fft_lut_circbufferindex] = float(index)
 					data[index][sensor] = fft_comp
 
 				# Clear buffers
@@ -234,6 +254,12 @@ def retrieve_headset_data():
 		headset.close()
 	finally:
 		headset.close()
+
+def update_fft_lut_circbufferindex():
+	global fft_lut_circbufferindex
+	fft_lut_circbufferindex += 1
+	if fft_lut_circbufferindex == fft_lut_circbuffersize:
+		fft_lut_circbufferindex = 0
 
 def write_ind_comp(csvDataBuffer):
 	global root
@@ -250,7 +276,7 @@ def write_ind_comp(csvDataBuffer):
 			for ii in range(0,len(csvDataBuffer[index][channel])-1):
 				csv_data += str(csvDataBuffer[index][channel][ii]) + ","
 		csv_data += "\n"
-	fo = open("test_data/lhchung_ctn_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
+	fo = open("test_data/lhchung_research_"+str(testcase)+"_"+str(testdescrip)+"_30s.csv", "wb")
 	fo.write(csv_data)
 	fo.close()
 	#print "Done"
@@ -554,6 +580,7 @@ def change_num():
 		pass
 
 	print "Start test"
+	runClassifier = True
 	while time_counter < run_duration:
 		#print "Time counter"+str(time_counter)
 		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
@@ -565,12 +592,19 @@ def change_num():
 			app.change_colour("red")
 			label_text.set(str(item_num))
 			root.update()
+			if runClassifier:
+				classifier_thread.start()
+				runClassifier = False
 
 		time.sleep(change_rate)
 		time_counter += change_rate
 
 	should_end_test = True
 	print "End test = " + str(test_numbers)
+
+def analyzePattern():
+	print str((fft_lut_t['O1'][63]))
+	print str(mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49))
 
 def generate_nums():
 	global item_num
@@ -598,11 +632,15 @@ def open_application():
 	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
 	app = MainFrame(root)
 	
+	time.sleep(1)
 	generate_nums()
 	start_test()
 
 	root.mainloop()
 
 if __name__ == "__main__":
+	global classifier_thread
+	mclassifier.load_minmax_decision_values(classifier_type.temporal_working_memory,'research_check_dv_median_t78.csv')
 	verify_user()
+	classifier_thread = threading.Thread(target=analyzePattern, args=())
 	open_application()

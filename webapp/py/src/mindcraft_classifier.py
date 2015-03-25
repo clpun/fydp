@@ -5,6 +5,7 @@ import time
 import os
 from enum import Enum
 from csv import reader
+from scipy.stats import norm
 
 sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
 class classifier_type(Enum):
@@ -32,10 +33,9 @@ def load_minmax_decision_values(input_type, filename):
                 if first_row:
                     first_row = False
                     continue
-                if int(row[6]) == 1:
-                    dvs_minmax.append(tuple(row))
+                dvs_minmax.append(tuple(row))
         twm_minmax_dvs_lut = np.rec.array(dvs_minmax,
-                                dtype=[('CH', '|S8'), ('frequency', '<i4'), ('C1', '<i4'), ('C2', '<i4'), ('DV', '<f8'), ('increase','<u1'), ('accepted','<u1')])
+                                dtype=[('CH', '|S8'), ('frequency', '<i4'), ('C1', '<i4'), ('C2', '<i4'), ('DV', '<f8')])
         print "Successfully import user's min max twm decision values = " + str(twm_minmax_dvs_lut)
 
 def load_mean_decision_values(input_type, filename):
@@ -135,13 +135,24 @@ def check_minmax_dvs(input_type,ffts_t,ffts_circbufferindex,control_lbound,contr
             dscale = float(ii[4])
             control_minmaxdiff = check_minmaxdiff(ffts_t,ffts_circbufferindex,channel,frequency,control_lbound,control_ubound)
             encoding_minmaxdiff = check_minmaxdiff(ffts_t,ffts_circbufferindex,channel,frequency,encoding_lbound,encoding_ubound)
+            control_std = check_std(ffts_t,ffts_circbufferindex,channel,frequency,control_lbound,control_ubound)
+            encoding_std = check_std(ffts_t,ffts_circbufferindex,channel,frequency,encoding_lbound,encoding_ubound)
+            # print "ii = " + str(ii)
+            # print "control_std = " + str(control_std)
+            # print "encoding_std = " + str(encoding_std)
             if(control_minmaxdiff/encoding_minmaxdiff >= dscale):
                 satisfy = True
+            # if(control_std/encoding_std >= 1):
+            #     satisfy = True
             if(satisfy):
+                print str(ii) + " : +"
                 pos += 1
             else:
+                print str(ii) + " : -"
                 neg += 1
-        if (float(pos-neg)/float(pos+neg)) > 0.95:
+        print "pos = " + str(pos)
+        print "neg = " + str(neg)
+        if (float(pos-neg)/float(pos+neg)) > 0.70:
             return True
         else:
             return False
@@ -273,6 +284,35 @@ def check_minmaxdiff(ffts_t, ffts_circbufferindex, channel, frequency, lbound, u
     return (max_val-min_val)
 
 '''
+    Assume the circular buffer of size n with values denoted by indices 0, 1, 2, n [0 1 2 n]
+    with n is the most recent entry (ffts_circbufferindex)
+    Suppose we want to know the std of the buffer
+    from index 0 to index 2
+    lbound = 0
+    ubound = 2
+'''
+def check_std(ffts_t, ffts_circbufferindex, channel, frequency, lbound, ubound):
+    target_buffer = ffts_t[channel][frequency]
+    bsize = len(target_buffer)
+    if(lbound>=bsize or lbound<0 or ubound>=bsize or lbound<0 or lbound>=ubound):
+        raise Exception('Unbound parameters for check_minmaxdiff')
+        return 10000000.0
+    lbound_rel_index = adjust_bufferindexoffset(lbound,ffts_circbufferindex,bsize)
+    ubound_rel_index = adjust_bufferindexoffset(ubound,ffts_circbufferindex,bsize)
+    data = []
+
+    terminate = False
+    ii = dec_circbufferindex(lbound_rel_index,bsize)
+    while (not terminate):
+        ii = inc_circbufferindex(ii,bsize)
+        data.append(target_buffer[ii])
+        if(ii==ubound_rel_index):
+            terminate = True
+    # print "data = " + str(data)
+    mu, std = norm.fit(np.array(data))
+    return (std)
+
+'''
     Using the model where the last element of the circular buffer is the most recent one
     Convert index to the relative index in the circular buffer
     e.g. [0 1 2 n], circbufferindex = 2, index = 0 (oldest entry)
@@ -281,7 +321,7 @@ def check_minmaxdiff(ffts_t, ffts_circbufferindex, channel, frequency, lbound, u
 def adjust_bufferindexoffset(index, circbufferindex, bsize):
     if(circbufferindex>bsize or index<0 or index>=bsize):
         raise Exception('Unbound parameters for adjust_bufferindexoffset')
-    rel_index = index-(bsize-circbufferindex)
+    rel_index = index-(bsize-1-circbufferindex)
     if rel_index < 0:
         return (rel_index+bsize)
     else:
