@@ -604,7 +604,12 @@ def change_num():
 
 def analyzePattern():
 	print str((fft_lut_t['O1'][63]))
-	print str(mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49))
+	#print str(mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49))
+	performed_encode = mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49)
+	if performed_encode == True:
+		print "Attempted to perform memory encoding"
+	else:
+		print "Did not attempt to perform memory encoding"
 
 def generate_nums():
 	global item_num
@@ -640,7 +645,7 @@ def open_application():
 
 if __name__ == "__main__":
 	global classifier_thread
-	mclassifier.load_minmax_decision_values(classifier_type.temporal_working_memory,'research_check_dv_median_t78.csv')
+	mclassifier.load_minmax_decision_values(classifier_type.temporal_working_memory,'research_dv_median_ab_sigma_ratio.csv')
 	verify_user()
 	classifier_thread = threading.Thread(target=analyzePattern, args=())
 	open_application()

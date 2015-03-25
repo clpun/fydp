@@ -140,10 +140,10 @@ def check_minmax_dvs(input_type,ffts_t,ffts_circbufferindex,control_lbound,contr
             # print "ii = " + str(ii)
             # print "control_std = " + str(control_std)
             # print "encoding_std = " + str(encoding_std)
-            if(control_minmaxdiff/encoding_minmaxdiff >= dscale):
-                satisfy = True
-            # if(control_std/encoding_std >= 1):
-            #     satisfy = True
+            #if(control_minmaxdiff/encoding_minmaxdiff >= dscale):
+            #    satisfy = True
+            if(control_std/encoding_std >= 1):
+                 satisfy = True
             if(satisfy):
                 print str(ii) + " : +"
                 pos += 1
@@ -152,7 +152,7 @@ def check_minmax_dvs(input_type,ffts_t,ffts_circbufferindex,control_lbound,contr
                 neg += 1
         print "pos = " + str(pos)
         print "neg = " + str(neg)
-        if (float(pos-neg)/float(pos+neg)) > 0.70:
+        if (float(pos)/float(pos+neg)) > 0.70:
             return True
         else:
             return False
