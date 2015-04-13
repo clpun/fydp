@@ -11,7 +11,6 @@ sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F
 num_channel = len(sensor_names)
 num_freq = 64
 
-
 def load_test_file(filename,channel):
     index = 0
     data_array = []
@@ -48,6 +47,7 @@ def output_csv_file(data):
 		output.writelines(tmp)
 	output.close()
 
+'''find_bands_for_control returns the bands of a number of test cases of a specific channel'''
 def find_bands_for_control(prefix,suffix,test_number,test_range,target_channel):
 	# test = load_test_file(prefix+str(601)+suffix,target_channel)
 	# print str(test[10])
@@ -62,17 +62,34 @@ def find_bands_for_control(prefix,suffix,test_number,test_range,target_channel):
 			bands = mmc.find_bands(test_case[jj])
 			result.append(bands)
 			# print "bands = " + str(bands)
-	print "result = " + str(len(result))
-	output_csv_file(result)
-	return np.array(result)
+	# print "result = " + str(len(result))
+	# output_csv_file(result)
+	return (result)
+
+def find_bands_for_all_channels(prefix,suffix,test_number,test_range):
+	bands_print = []
+	for ii in range(0,len(sensor_names)):
+		print "Finding bands for channel " + sensor_names[ii] + "..."
+		array = find_bands_for_control(prefix,suffix,test_number,test_range,sensor_names[ii])
+		hist = mmc.plot_histogram(array)
+		bands = mmc.find_multimodes(hist)
+		tmp_array = []
+		tmp_array.append(sensor_names[ii])
+		for jj in range(0,len(bands)):
+			tmp_array.append(bands[jj])
+		bands_print.append(tmp_array)
+	output_csv_file(bands_print)
+	print "Finish printing csv at " + output_root+output_file
 
 if __name__ == "__main__":
 	test_data_file_prefix = "lhchung_ctn_"
 	test_data_file_suffix = "_5~0s4-7~5_30s.csv"
 	test_data_number = 600
-	# array = []
-	array = find_bands_for_control(test_data_file_prefix,test_data_file_suffix,test_data_number,27,"T7")
-	hist = mmc.plot_histogram(array)
-	bands = mmc.find_multimodes(hist)
-	print "bands = " + str(bands)
-	print "len(bands) = " + str(len(bands))
+
+	# array = find_bands_for_control(test_data_file_prefix,test_data_file_suffix,test_data_number,27,"T7")
+	# hist = mmc.plot_histogram(array)
+	# bands = mmc.find_multimodes(hist)
+	# print "bands = " + str(bands)
+	# print "len(bands) = " + str(len(bands))
+
+	find_bands_for_all_channels(test_data_file_prefix,test_data_file_suffix,test_data_number,27)
