@@ -46,57 +46,39 @@ class Particle:
 	def get_pos(self):
 		return self.pos
 
-'''find_bands finds the minimums of the 1d array .'''
+'''find_bands finds the minimums of the 1d array.'''
 def find_bands(data):
 	bands = []
 	max_freq = len(data)
 	boundaries = []
-	# print str((data))
-	# for ii in range(0,len(data)):
-	# 	if ii == 0:
-	# 		if data[ii+1] - data[ii] > 0:
-	# 			boundaries.append(-1)
-	# 		else:
-	# 			boundaries.append(1)
-	# 	elif ii == len(data)-1:
-	# 		if data[ii] - data[ii-1] > 0:
-	# 			boundaries.append(1)
-	# 		else:
-	# 			boundaries.append(-1)
-	# 	else:
-	# 		backdiff = data[ii] - data[ii-1]
-	# 		forwarddiff = data[ii+1] - data[ii]
-	# 		if backdiff < 0 and forwarddiff > 0:
-	# 			boundaries.append(-1)
-	# 		elif backdiff > 0 and forwarddiff < 0:
-	# 			boundaries.append(1)
-	# 		else:
-	# 			boundaries.append(0)
-	# print str(boundaries)
-	# numBoundaries = 0
-	# for ii in range(1,len(boundaries)-1):
-	# 	if boundaries[ii] == -1:
-	# 		numBoundaries += 1
-	# print str(numBoundaries)
-	# index = 1
 	boundaries = minimax_locator(data)
-	prevBound = 0
 	bands.append(0)
 	for ii in range(1,len(boundaries)-1):
 		if boundaries[ii] == -1:
-			# print (str(index) + " band : " + str(prevBound+1) + " ~ " + str(ii) + " Hz ("+str(ii-prevBound-1)+")")
-			# bands.append([prevBound,ii])
 			bands.append(ii)
-			prevBound = ii
-			# index += 1
-			# if index == numBoundaries+1:
-			# 	bands.append([prevBound,max_freq-1])
-			# 	bands.append(max_freq-1)
-			# 	print (str(index) + " band : " + str(prevBound+1) + " ~ "+str(max_freq)+" Hz ("+str(max_freq-prevBound-1)+")")
-			# 	break
 	bands.append(max_freq-1)
 	# print str(bands)
 	return np.array(bands)
+
+'''find_clusters finds the maximums of the 1d array.
+It returns the values at the maximas'''
+def find_clusters(data):
+	result = []
+	clusters = []
+	maximas = []
+	maximas = minimax_locator(data)
+	for ii in range(0,len(maximas)):
+		if maximas[ii] == 1:
+			clusters.append(ii)
+	clusters = stochastic_hillclimbing_search(data,clusters,400,30)
+	jj = 0
+	for ii in range(0,len(data)):
+		if ii == clusters[jj]:
+			result.append(data[clusters[jj]])
+			jj += 1
+		else:
+			result.append(0)
+	return np.array(result)
 
 '''minimax_locator finds the minimas and maximas of the 1d array data.
 It return an array with +1 indicating a maxima and -1 indicating a minima'''
