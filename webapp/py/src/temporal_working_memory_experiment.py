@@ -1,0 +1,611 @@
+# !/usr/bin/env python
+import os
+import time
+import math
+import signal_preprocessing as sp
+import gevent
+# import fft
+import threading
+import mindcraft_classifier as mclassifier
+import numpy as np
+
+from random import randint
+from ..lib import emotiv
+from Tkinter import Tk, Frame, BOTH, Button, Label, StringVar
+
+sensor_names = ['F3', 'FC5', 'AF3', 'F7', 'T7', 'P7', 'O1', 'O2', 'P8', 'T8', 'F8', 'AF4', 'FC6', 'F4']
+data = {}
+samplingFreq = 128.0
+# fftSamplingNum = 26.0
+# oneFftPeriod = fftSamplingNum/samplingFreq
+classifier_thread = None
+
+from enum import Enum
+class classifier_type(Enum):
+	temporal_working_memory = 1
+fft_lut_t = {}	  # Look Up Table
+fft_lut_circbuffersize = 50
+fft_lut_circbufferindex = fft_lut_circbuffersize - 1
+for sensor in sensor_names:
+	fft_lut_t[sensor] = {}
+	for jj in range(0, 64):
+		fft_lut_t[sensor][jj] = ([int(0)]*fft_lut_circbuffersize)
+	# for ii in range(0,64):
+	# 	fft_lut_t[sensor][ii] = np.empty(fft_lut_circbuffersize,dtype='<f8')
+
+app = None
+control_duration = 5.0
+change_rate = 0.5
+item_num = 7
+test_duration = change_rate*item_num
+after_duration = 5.0
+run_duration = control_duration+test_duration+after_duration 
+testcase = "600"
+testdescrip = str(int(control_duration)) + "~" + str(change_rate).replace(".","s") + "-" + str(item_num) + "~" + str(int(after_duration))
+test_numbers = []
+index = 0
+# index_limit = math.ceil(run_duration/oneFftPeriod)
+index_limit = 128*run_duration
+print "Number of samples will be recorded: " + str(index_limit)
+test_can_start = False
+screen_width = 0
+screen_height = 0
+should_end_test = False
+
+class UserPreference:
+	user_name = "User"
+	env_offset_avg_var = {}
+	def write_env_offset_avg_var(self,name,var):
+		self.env_offset_avg_var.update({name: var})
+
+	def read_env_offset_avg_var(self,name):
+		return self.env_offset_avg_var[name]
+
+user_preference = UserPreference()
+f3_mean = 0.0
+fc5_mean = 0.0
+af3_mean = 0.0
+f7_mean = 0.0
+t7_mean = 0.0
+p7_mean = 0.0
+o1_mean = 0.0
+o2_mean = 0.0
+p8_mean = 0.0
+t8_mean = 0.0
+f8_mean = 0.0
+af4_mean = 0.0
+fc6_mean = 0.0
+f4_mean = 0.0
+# Initialize sensor buffers
+F3Buffer = []
+FC5Buffer = []
+AF3Buffer = []
+F7Buffer = []
+T7Buffer = []
+P7Buffer = []
+O1Buffer = []
+O2Buffer = []
+P8Buffer = []
+T8Buffer = []
+F8Buffer = []
+AF4Buffer = []
+FC6Buffer = []
+F4Buffer = []
+
+def retrieve_headset_data():
+	global headset
+	global data
+	global gyroX
+	global gyroY
+	global battery
+	global index
+	global test_can_start
+	global should_end_test
+	global fft_lut_t
+
+	F3 = {}
+	FC5 = {}
+	AF3 = {}
+	F7 = {}
+	T7 = {}
+	P7 = {}
+	O1 = {}
+	O2 = {}
+	P8 = {}
+	T8 = {}
+	F8 = {}
+	AF4 = {}
+	FC6 = {}
+	F4 = {}
+
+	headset = emotiv.Emotiv()
+	gevent.spawn(headset.setup)
+	gevent.sleep(1)
+
+	try:
+		sample_counter = 0
+		test_can_start = True
+		headset.packets.queue.clear()
+		#while should_end_test == False:
+		while index <= index_limit:
+			# Retrieve emotiv packet
+			packet = headset.dequeue()
+
+			battery = packet.battery
+			gyroX = packet.sensors['X']['value']
+			gyroY = packet.sensors['Y']['value']
+
+			F3 = packet.sensors['F3']
+			FC5 = packet.sensors['FC5']
+			AF3 = packet.sensors['AF3']
+			F7 = packet.sensors['F7']
+			T7 = packet.sensors['T7']
+			P7 = packet.sensors['P7']
+			O1 = packet.sensors['O1']
+			O2 = packet.sensors['O2']
+			P8 = packet.sensors['P8']
+			T8 = packet.sensors['T8']
+			F8 = packet.sensors['F8']
+			AF4 = packet.sensors['AF4']
+			FC6 = packet.sensors['FC6']
+			F4 = packet.sensors['F4']
+
+			# Build buffers for FFT
+			F3Buffer.append(F3['value'])
+			FC5Buffer.append(FC5['value'])
+			AF3Buffer.append(AF3['value'])
+			F7Buffer.append(F7['value'])
+			T7Buffer.append(T7['value'])
+			P7Buffer.append(P7['value'])
+			O1Buffer.append(O1['value'])
+			O2Buffer.append(O2['value'])
+			P8Buffer.append(P8['value'])
+			T8Buffer.append(T8['value'])
+			F8Buffer.append(F8['value'])
+			AF4Buffer.append(AF4['value'])
+			FC6Buffer.append(FC6['value'])
+			F4Buffer.append(F4['value'])
+			index += 1
+
+		# Remove high frequency noise and dc offset
+		F3Buffer_clean = sp.preprocess(F3Buffer, f3_mean)
+		FC5Buffer_clean = sp.preprocess(FC5Buffer, fc5_mean)
+		AF3Buffer_clean = sp.preprocess(AF3Buffer, af3_mean)
+		F7Buffer_clean = sp.preprocess(F7Buffer, f7_mean)
+		T7Buffer_clean = sp.preprocess(T7Buffer, t7_mean)
+		P7Buffer_clean = sp.preprocess(P7Buffer, p7_mean)
+		O1Buffer_clean = sp.preprocess(O1Buffer, o1_mean)
+		O2Buffer_clean = sp.preprocess(O2Buffer, o2_mean)
+		P8Buffer_clean = sp.preprocess(P8Buffer, p8_mean)
+		T8Buffer_clean = sp.preprocess(T8Buffer, t8_mean)
+		F8Buffer_clean = sp.preprocess(F8Buffer, f8_mean)
+		AF4Buffer_clean = sp.preprocess(AF4Buffer, af4_mean)
+		FC6Buffer_clean = sp.preprocess(FC6Buffer, fc6_mean)
+		F4Buffer_clean = sp.preprocess(F4Buffer, f4_mean)
+		print "number of rows recorded: " + str(len(F4Buffer_clean))
+		for sensor in sensor_names:
+			if sensor == 'F3':
+				data[sensor] = F3Buffer_clean
+			elif sensor == 'FC5':
+				data[sensor] = FC5Buffer_clean
+			elif sensor == 'AF3':
+				data[sensor] = AF3Buffer_clean
+			elif sensor == 'F7':
+				data[sensor] = F7Buffer_clean
+			elif sensor == 'T7':
+				data[sensor] = T7Buffer_clean
+			elif sensor == 'P7':
+				data[sensor] = P7Buffer_clean
+			elif sensor == 'O1':
+				data[sensor] = O1Buffer_clean
+			elif sensor == 'O2':
+				data[sensor] = O2Buffer_clean
+			elif sensor == 'P8':
+				data[sensor] = P8Buffer_clean
+			elif sensor == 'T8':
+				data[sensor] = T8Buffer_clean
+			elif sensor == 'F8':
+				data[sensor] = F8Buffer_clean
+			elif sensor == 'AF4':
+				data[sensor] = AF4Buffer_clean
+			elif sensor == 'FC6':
+				data[sensor] = FC6Buffer_clean
+			elif sensor == 'F4':
+				data[sensor] = F4Buffer_clean
+		write_ind_comp(data)
+	except KeyboardInterrupt:
+		headset.close()
+	finally:
+		headset.close()
+
+def update_fft_lut_circbufferindex():
+	global fft_lut_circbufferindex
+	fft_lut_circbufferindex += 1
+	if fft_lut_circbufferindex == fft_lut_circbuffersize:
+		fft_lut_circbufferindex = 0
+
+def write_ind_comp(csvDataBuffer):
+	global root
+
+	#print "Writing data to csv file"
+	csv_data = ""
+	for sensor in sensor_names:
+		csv_data += sensor + ","
+	csv_data += "\n"
+	for ii in range(0,len(csvDataBuffer["F3"])):
+		for sensor in sensor_names:
+			csv_data += str(csvDataBuffer[sensor][ii]) + ","
+		csv_data += "\n"
+	fo = open("test_data/olegm_ctn_"+str(testcase)+"_"+str(testdescrip)+"_13s5.csv", "wb")
+	fo.write(csv_data)
+	fo.close()
+	#print "Done"
+	root.destroy()
+
+	return
+
+def cal_rel_power(fftobj,rg):
+	median = 0.0
+	summation = 0.0
+	for ii in range(rg[0],rg[1]):
+		median += fftobj[ii] * ii
+		summation += fftobj[ii]
+	return str(median/summation)
+
+def verify_user():
+	global user_preference
+	global f3_mean
+	global fc5_mean
+	global af3_mean
+	global f7_mean
+	global t7_mean
+	global p7_mean
+	global o1_mean
+	global o2_mean
+	global p8_mean
+	global t8_mean
+	global f8_mean
+	global af4_mean
+	global fc6_mean
+	global f4_mean
+
+	user_verify = False
+	while not user_verify:
+		#user_name = raw_input("User id: ")
+		user_name = "olegm"
+		if user_name.isalnum():
+			user_preference.user_name = user_name
+			try:
+				if os.path.exists(user_name + '.txt'):
+					pref_file = open(user_name + '.txt','r+')
+				else:
+					pref_file = open(user_name + '.txt','w+')
+					print "Welcome new user : " + user_name
+				line = pref_file.readline()
+				while line != '':
+					elements = line.split(':')
+					if len(elements) == 2:
+						if elements[0] == 'f3_mean':
+							user_preference.write_env_offset_avg_var('f3_mean',float(elements[1]))
+						elif elements[0] == 'fc5_mean':
+							user_preference.write_env_offset_avg_var('fc5_mean',float(elements[1]))
+						elif elements[0] == 'af3_mean':
+							user_preference.write_env_offset_avg_var('af3_mean',float(elements[1]))
+						elif elements[0] == 'f7_mean':
+							user_preference.write_env_offset_avg_var('f7_mean',float(elements[1]))
+						elif elements[0] == 't7_mean':
+							user_preference.write_env_offset_avg_var('t7_mean',float(elements[1]))
+						elif elements[0] == 'p7_mean':
+							user_preference.write_env_offset_avg_var('p7_mean',float(elements[1]))
+						elif elements[0] == 'o1_mean':
+							user_preference.write_env_offset_avg_var('o1_mean',float(elements[1]))
+						elif elements[0] == 'o2_mean':
+							user_preference.write_env_offset_avg_var('o2_mean',float(elements[1]))
+						elif elements[0] == 'p8_mean':
+							user_preference.write_env_offset_avg_var('p8_mean',float(elements[1]))
+						elif elements[0] == 't8_mean':
+							user_preference.write_env_offset_avg_var('t8_mean',float(elements[1]))
+						elif elements[0] == 'f8_mean':
+							user_preference.write_env_offset_avg_var('f8_mean',float(elements[1]))
+						elif elements[0] == 'af4_mean':
+							user_preference.write_env_offset_avg_var('af4_mean',float(elements[1]))
+						elif elements[0] == 'fc6_mean':
+							user_preference.write_env_offset_avg_var('fc6_mean',float(elements[1]))
+						elif elements[0] == 'f4_mean':
+							user_preference.write_env_offset_avg_var('f4_mean',float(elements[1]))
+						else:
+							pass
+					line = pref_file.readline()
+				pref_file.close()
+				if len(user_preference.env_offset_avg_var) == 0:
+					find_mean()
+					pref_file = open(user_name + '.txt','w')
+					param = []
+					for keys in user_preference.env_offset_avg_var:
+						param.append(keys + ':' + str(user_preference.env_offset_avg_var[keys])+'\n')
+					pref_file.writelines(param)
+					pref_file.close()
+					user_verify = True
+				else:
+					prompt_calculate_average = "Y"
+					#prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
+					while not (prompt_calculate_average == 'Y' or prompt_calculate_average == 'N'):
+						prompt_calculate_average = raw_input("\nY: Use Previous Signal Average, N: Recalculate Signal Average\n")
+					if prompt_calculate_average == 'Y':
+						f3_mean = user_preference.read_env_offset_avg_var('f3_mean')
+						fc5_mean = user_preference.read_env_offset_avg_var('fc5_mean')
+						af3_mean = user_preference.read_env_offset_avg_var('af3_mean')
+						f7_mean = user_preference.read_env_offset_avg_var('f7_mean')
+						t7_mean = user_preference.read_env_offset_avg_var('t7_mean')
+						p7_mean = user_preference.read_env_offset_avg_var('p7_mean')
+						o1_mean = user_preference.read_env_offset_avg_var('o1_mean')
+						o2_mean = user_preference.read_env_offset_avg_var('o2_mean')
+						p8_mean = user_preference.read_env_offset_avg_var('p8_mean')
+						t8_mean = user_preference.read_env_offset_avg_var('t8_mean')
+						f8_mean = user_preference.read_env_offset_avg_var('f8_mean')
+						af4_mean = user_preference.read_env_offset_avg_var('af4_mean')
+						fc6_mean = user_preference.read_env_offset_avg_var('fc6_mean')
+						f4_mean = user_preference.read_env_offset_avg_var('f4_mean')
+						user_verify = True
+					elif prompt_calculate_average == 'N':
+						find_mean()
+						pref_file = open(user_name + '.txt','w')
+						param = []
+						for keys in user_preference.env_offset_avg_var:
+							param.append(keys + ':' + str(user_preference.env_offset_avg_var[keys])+'\n')
+						pref_file.writelines(param)
+						pref_file.close()
+						user_verify = True
+
+				if not user_verify:
+					print "Something is wrong with the environment offset average variables. Please use another user id."
+				else:
+					print 'check signal quality'
+					#check_signal_quality.run(headset)
+
+			except IOError:
+				print "IO Error"
+			except RuntimeError:
+				user_verify = False
+				print "User id is corrupted. Please use another user id."
+				pref_file.close()
+		else:
+			print "Invalid user id. Please use an alphanumeric id."
+
+def find_mean():
+	global user_preference
+	headset = emotiv.Emotiv()
+	gevent.spawn(headset.setup)
+	gevent.sleep(1)
+	counter = 0
+
+	raw_input("Need to Calculate signal average. Do NOT wear the headset. Please press enter to continue...")
+	print("Calculating signal average. Please wait...")
+
+	while counter < 1000:
+		print "..." + str((counter+1)/10) + "%"
+		# Retrieve emotiv packet
+		#headset = emotiv.Emotiv()
+		packet = headset.dequeue()
+
+		# Get sensor data
+		F3 = packet.sensors['F3']['value']
+		FC5 = packet.sensors['FC5']['value']
+		AF3 = packet.sensors['AF3']['value']
+		F7 = packet.sensors['F7']['value']
+		T7 = packet.sensors['T7']['value']
+		P7 = packet.sensors['P7']['value']
+		O1 = packet.sensors['O1']['value']
+		O2 = packet.sensors['O2']['value']
+		P8 = packet.sensors['P8']['value']
+		T8 = packet.sensors['T8']['value']
+		F8 = packet.sensors['F8']['value']
+		AF4 = packet.sensors['AF4']['value']
+		FC6 = packet.sensors['FC6']['value']
+		F4 = packet.sensors['F4']['value']
+
+		# Build buffers for FFT
+		F3Buffer.append(F3)
+		FC5Buffer.append(FC5)
+		AF3Buffer.append(AF3)
+		F7Buffer.append(F7)
+		T7Buffer.append(T7)
+		P7Buffer.append(P7)
+		O1Buffer.append(O1)
+		O2Buffer.append(O2)
+		P8Buffer.append(P8)
+		T8Buffer.append(T8)
+		F8Buffer.append(F8)
+		AF4Buffer.append(AF4)
+		FC6Buffer.append(FC6)
+		F4Buffer.append(F4)
+
+		counter = counter + 1
+
+	global f3_mean
+	f3_mean = np.mean(F3Buffer)
+	user_preference.write_env_offset_avg_var('f3_mean',f3_mean)
+	global fc5_mean
+	fc5_mean = np.mean(FC5Buffer)
+	user_preference.write_env_offset_avg_var('fc5_mean',fc5_mean)
+	global af3_mean
+	af3_mean = np.mean(AF3Buffer)
+	user_preference.write_env_offset_avg_var('af3_mean',af3_mean)
+	global f7_mean
+	f7_mean = np.mean(F7Buffer)
+	user_preference.write_env_offset_avg_var('f7_mean',f7_mean)
+	global t7_mean
+	t7_mean = np.mean(T7Buffer)
+	user_preference.write_env_offset_avg_var('t7_mean',t7_mean)
+	global p7_mean
+	p7_mean = np.mean(P7Buffer)
+	user_preference.write_env_offset_avg_var('p7_mean',p7_mean)
+	global o1_mean
+	o1_mean = np.mean(O1Buffer)
+	user_preference.write_env_offset_avg_var('o1_mean',o1_mean)
+	global o2_mean
+	o2_mean = np.mean(O2Buffer)
+	user_preference.write_env_offset_avg_var('o2_mean',o2_mean)
+	global p8_mean
+	p8_mean = np.mean(P8Buffer)
+	user_preference.write_env_offset_avg_var('p8_mean',p8_mean)
+	global t8_mean
+	t8_mean = np.mean(T8Buffer)
+	user_preference.write_env_offset_avg_var('t8_mean',t8_mean)
+	global f8_mean
+	f8_mean = np.mean(F8Buffer)
+	user_preference.write_env_offset_avg_var('f8_mean',f8_mean)
+	global af4_mean
+	af4_mean = np.mean(AF4Buffer)
+	user_preference.write_env_offset_avg_var('af4_mean',af4_mean)
+	global fc6_mean
+	fc6_mean = np.mean(FC6Buffer)
+	user_preference.write_env_offset_avg_var('fc6_mean',fc6_mean)
+	global f4_mean
+	f4_mean = np.mean(F4Buffer)
+	user_preference.write_env_offset_avg_var('f4_mean',f4_mean)
+
+	clear_buffers()
+
+def clear_buffers():
+	del F3Buffer[:]
+	del FC5Buffer[:]
+	del AF3Buffer[:]
+	del F7Buffer[:]
+	del T7Buffer[:]
+	del P7Buffer[:]
+	del O1Buffer[:]
+	del O2Buffer[:]
+	del P8Buffer[:]
+	del T8Buffer[:]
+	del F8Buffer[:]
+	del AF4Buffer[:]
+	del FC6Buffer[:]
+	del F4Buffer[:]
+
+class MainFrame(Frame):
+	num_label = None
+
+	def __init__(self, parent):
+		Frame.__init__(self, parent, background="white")
+		self.parent = parent
+		self.init_UI()
+
+	def init_UI(self):
+		global label_text
+		global screen_width
+		global screen_height
+		global item_num
+
+		self.parent.title("Temporal Working Memory Test")
+
+		#start_button = Button(self, text="Start", command=start_button_callback)
+		#start_button.place(x=0, y=0)
+
+		label_text.set(str(item_num))
+		self.num_label = Label(self, textvariable=label_text, bg="white", fg="red", font=("Helvetica", 136))
+		self.num_label.place(x=math.ceil(screen_width/2-40), y=math.ceil(screen_height/2-160))
+
+		self.pack(fill=BOTH, expand=1)
+
+	def change_colour(self, colour):
+		self.num_label.config(fg=colour)
+
+def start_test():
+	print "In start_test"
+	data_thread = threading.Thread(target=retrieve_headset_data, args=())
+	data_thread.start()
+
+	# Run the actual test
+	change_num_thread = threading.Thread(target=change_num, args=())
+	change_num_thread.start()
+
+def change_num():
+	global label_text
+	global root
+	global app
+	global test_can_start
+	global should_end_test
+	global control_duration
+	global item_num
+	global change_rate
+	global test_duration
+	global after_duration
+	global run_duration
+	time_counter = 0.0
+	limit = 9
+	n = 0
+
+	while test_can_start == False:
+		pass
+
+	print "Start test"
+	runClassifier = False
+	while time_counter < run_duration:
+		#print "Time counter"+str(time_counter)
+		if time_counter > control_duration and time_counter <= (control_duration+test_duration):
+			label_text.set(str(test_numbers[n]))
+			app.change_colour("green")
+			root.update()
+			n += 1
+		elif time_counter > (control_duration+test_duration):
+			app.change_colour("red")
+			label_text.set(str(item_num))
+			root.update()
+			if runClassifier:
+				classifier_thread.start()
+				runClassifier = False
+
+		time.sleep(change_rate)
+		time_counter += change_rate
+
+	should_end_test = True
+	print "End test = " + str(test_numbers)
+
+def analyzePattern():
+	print str((fft_lut_t['O1'][63]))
+	#print str(mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49))
+	performed_encode = mclassifier.twm_minmax_classifier(fft_lut_t,fft_lut_circbufferindex,8,32,33,49)
+	if performed_encode == True:
+		print "Attempted to perform memory encoding"
+	else:
+		print "Did not attempt to perform memory encoding"
+
+def generate_nums():
+	global item_num
+	limit = 9
+
+	# Generate a set of random numbers to be displayed. 
+	for i in range(0, item_num):
+		num = randint(1, limit)
+		if len(test_numbers) > 0:
+			while prev_num == num:
+				num = randint(1, limit)
+		prev_num = num
+		test_numbers.append(num)
+
+def open_application():
+	global label_text
+	global root
+	global app
+	global screen_width
+	global screen_height
+
+	root = Tk()
+	screen_width, screen_height = root.winfo_screenwidth(), root.winfo_screenheight()
+	label_text = StringVar()
+	root.geometry("%dx%d+0+0" % (screen_width, screen_height))
+	app = MainFrame(root)
+	
+	time.sleep(1)
+	generate_nums()
+	start_test()
+
+	root.mainloop()
+
+if __name__ == "__main__":
+	global classifier_thread
+	# mclassifier.load_minmax_decision_values(classifier_type.temporal_working_memory,'research_dv_median_ab_sigma_ratio.csv')
+	verify_user()
+	# classifier_thread = threading.Thread(target=analyzePattern, args=())
+	open_application()
